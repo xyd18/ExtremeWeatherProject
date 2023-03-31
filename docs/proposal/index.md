@@ -1,8 +1,24 @@
 #### [Back to Peoject Page](../index.md)
 
+## Title
+Project Title: Parallelizing Transformer with Model and Pipline Parallelism
+
+
+Team Name: Extreme Weather
+
+
+Team Member:
+- Xiaoyu Li (yadix@andrew.cmu.edu)
+- Hao Ren (haoren@andrew.cmu.edu)
+
+## URL
+https://xyd18.github.io/ExtremeWeatherProject/
+
 ## Summary
 
-The project aims to accelerate the inference process of Transformer layers by parallelizing the computation across distributed GPUs. We will focus on parallelizing key components of the Transformer layer, including Multi-Head Self-Attention, Position-wise Feed-Forward Network, and Layer Normalization, using data and pipeline parallelism techniques. The implementation will be executed on a parallel system consisting of multiple GPUs interconnected through a high-speed communication fabric.
+- The project aims to accelerate the inference process of Transformer layers by parallelizing the computation across distributed CPU/GPUs. 
+- We will parallelize key components of the Transformer layer, including Multi-Head Self-Attention, Position-wise Feed-Forward Network, and Layer Normalization, using *Model* and *Pipeline* parallelism. 
+- We will experiment on multiple GPU/CPUs(on GHC and PSC machines) for distributed training of our Transformer.
 
 ## Background
 
@@ -64,7 +80,7 @@ We will use a distributed computing cluster equipped with multiple GPUs for this
 
 2. Starter Code:
 
-We will build upon an existing implementation of the Transformer architecture, such as the one provided by the [Hugging Face Transformers library](https://github.com/huggingface/transformers) or the [PyTorch library](https://pytorch.org). These libraries offer well-optimized implementations of the Transformer model, and we will extend them to incorporate parallelization across distributed GPUs.
+We will study existing implementation of the Transformer architecture, such as the one provided by the [Hugging Face Transformers library](https://github.com/huggingface/transformers) or the [PyTorch library](https://pytorch.org). These libraries offer well-optimized implementations of the Transformer model, and we will extend them to incorporate parallelization across distributed GPUs.
 
 3. Reference Materials:
 
@@ -82,8 +98,8 @@ Overall, we plan to start from an existing code base and build upon it to implem
 ### Plan to Achieve
 
 1. Implementation of parallelized Transformer layer inference on distributed GPUs. This will involve parallelizing the key components of the Transformer layer, including Multi-Head Self-Attention, Position-wise Feed-Forward Network, and Layer Normalization.
-2. Achieve a significant speedup in the inference time of the Transformer layer when executed on multiple GPUs compared to a single-GPU implementation. We aim for a minimum speedup of 3x, based on the parallelization potential of the Transformer layer and the reduction of computational bottlenecks.
-3. Conduct a comprehensive performance analysis to evaluate the scalability, efficiency, and communication overhead of our parallel implementation. This will include measuring the speedup achieved with varying numbers of GPUs, batch sizes, and model sizes.
+2. Achieve a good speedup in the inference time of the Transformer layer when executed on multiple GPUs compared to a single-GPU implementation. We aim for a minimum speedup of 3x with 4 machines. We think this goal is feasible given the parallelization potential of the Transformer layer and the reduction of computational bottlenecks.
+3. Conduct a performance analysis to evaluate the scalability, efficiency, and communication overhead of our model and pipeline implementation. This will include measuring the speedup achieved with varying numbers of GPUs, batch sizes, and model sizes.
 4. Provide documentation and codebase of the implemented parallel Transformer layer inference. This will include source code, comments, and a user guide to enable future work and reproducibility.
 
 ### Hope To Achieve (If ahead of schedule):
@@ -100,8 +116,6 @@ At the poster session, we plan to present the following:
 
 1. A visual representation of the parallelization strategies employed in the Transformer layer.
 2. Performance evaluation graphs that demonstrate the speedup achieved, scalability, and communication overhead of our parallel implementation.
-3. A live or recorded demo showcasing the inference process of a Transformer model using our parallel implementation, along with a comparison to the single-GPU version in terms of inference time.
-4. An interactive demo (if feasible) that allows users to provide input text and observe the model's output, demonstrating the practical utility of our optimized implementation.
 
 In summary, the primary goal of this project is to deliver an optimized parallel implementation of Transformer layer inference on distributed GPUs, achieving a significant speedup and scalability. We aim to demonstrate the effectiveness of our approach through comprehensive performance analysis and real-world application demos.
 
@@ -122,7 +136,7 @@ Overall, the chosen platform aligns well with the computational demands of the T
 | Time                | Plan                                                                                |
 | ------------------- | ----------------------------------------------------------------------------------- |
 | April 1 - April 7   | Understand transformer layer, set up environment and implement a sequential version |
-| April 8 - April 14  | Parallelize transformer using MPI and CUDA                                          |
+| April 8 - April 14  | Parallelize transformer using model parallelism with MPI and CUDA                                          |
 | April 15 - April 19 | Improve the parallized version and evaluate training/inference time on dataset      |
 | April 20 - April 25 | If ahead of schedule, implement pipeline parallelism for deep Transformer models    |
 | April 26 - May 1    | Perform analysis and benchmarks on finalized models                                 |
