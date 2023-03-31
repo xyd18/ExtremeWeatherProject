@@ -8,11 +8,11 @@ Team Name: Extreme Weather
 
 
 Team Member:
-- Xiaoyu Li (yadix@andrew.cmu.edu)
+- Yadi Xiao (yadix@andrew.cmu.edu)
 - Hao Ren (haoren@andrew.cmu.edu)
 
 ## URL
-https://xyd18.github.io/ExtremeWeatherProject/
+[https://xyd18.github.io/ExtremeWeatherProject/](https://xyd18.github.io/ExtremeWeatherProject/)
 
 ## Summary
 
