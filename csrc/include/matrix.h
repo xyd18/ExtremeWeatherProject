@@ -62,6 +62,16 @@ public:
         }
         return result;
     }
+
+    Matrix transponse() const {
+        Matrix result(cols, rows);
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                result(j, i) = (*this)(i, j);
+            }
+        }
+        return result;
+    }
 };
 
 class LinearLayer {
@@ -70,11 +80,12 @@ public:
     float* bias;    // Bias vector
 
     // Constructor with specified input dimension and output dimension
-    LinearLayer(int input_dim, int output_dim) : weight(output_dim, input_dim) {
+    LinearLayer(int input_dim, int output_dim) : weight(input_dim, output_dim) {
         bias = new float[output_dim];
         for (int i = 0; i < output_dim; ++i) {
             bias[i] = 0.0f;
         }
+        std::cout << "Linear layer initialized with input dimension " << input_dim << " and output dimension " << output_dim << std::endl;
     }
 
     ~LinearLayer() {

@@ -12,6 +12,8 @@ LayerNorm::LayerNorm(int hidden_size, float epsilon) {
         gamma[i] = 1.0;
         beta[i] = 0.0;
     }
+
+    std::cout << "LayerNorm::LayerNorm() " << hidden_size << std::endl;
 }
 
 LayerNorm::~LayerNorm() {
@@ -25,12 +27,12 @@ Matrix LayerNorm::forward(Matrix input) {
     for (int i = 0; i < output.rows; i++) {
         float mean = 0.0;
         float variance = 0.0;
-        for (int j = 0; j < hidden_size; j++) {
+        for (int j = 0; j < output.cols; j++) {
             mean += input(i,j);
             variance += input(i,j) * input(i,j);
         }
-        mean /= hidden_size;
-        variance = variance / hidden_size - mean * mean;
+        mean /= output.cols;
+        variance = variance / output.cols - mean * mean;
 
         // normalize input using mean and variance
         for (int j = 0; j < output.cols; j++) {
@@ -38,7 +40,7 @@ Matrix LayerNorm::forward(Matrix input) {
         }
 
         // apply scaling and shifting using gamma and beta
-        for (int j = 0; j < hidden_size; j++) {
+        for (int j = 0; j < output.cols; j++) {
             output(i,j) = gamma[j] * input(i,j) + beta[j];
         }
     }

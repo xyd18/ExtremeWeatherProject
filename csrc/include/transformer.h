@@ -26,6 +26,7 @@ public:
     Matrix forward(const Matrix& input) {
         // Pass input through the multi-head attention sublayer
         Matrix attention_output = multi_head_attention.forward(input);
+        std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
 
         // Add and normalize (residual connection + layer normalization)
         Matrix attention_add_norm = attention_norm.forward(input + attention_output);

@@ -35,6 +35,8 @@ FeedForwardLayer::FeedForwardLayer(int input_size, int hidden_size)
     {
         linear2.bias[i] = distribution(generator); // Initialize with random value
     }
+
+    std::cout << "FeedForwardLayer::FeedForwardLayer()" << std::endl;
 }
 
 FeedForwardLayer::~FeedForwardLayer()
@@ -44,7 +46,9 @@ FeedForwardLayer::~FeedForwardLayer()
 Matrix FeedForwardLayer::forward(const Matrix &input)
 {
     // Pass input through the first linear layer
+    std::cout << "linear input: " << input.rows << " " << input.cols << std::endl;
     Matrix hidden = linear1.forward(input);
+    std::cout << "linear hidden: " << hidden.rows << " " << hidden.cols << std::endl;
 
     // Apply activation function (e.g., ReLU) to the output of the first linear layer
     for (int i = 0; i < hidden.rows; ++i)
@@ -57,6 +61,7 @@ Matrix FeedForwardLayer::forward(const Matrix &input)
 
     // Pass the result through the second linear layer
     Matrix output = linear2.forward(hidden);
+    std::cout << "linear output: " << output.rows << " " << output.cols << std::endl;
 
     return output;
 }
