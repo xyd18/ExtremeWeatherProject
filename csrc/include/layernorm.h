@@ -16,6 +16,8 @@ public:
     ~LayerNorm();
 
     Matrix forward(Matrix input);
+
+    Matrix backward(Matrix grad);
 };
 
 #endif

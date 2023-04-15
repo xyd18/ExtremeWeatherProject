@@ -46,3 +46,30 @@ Matrix LayerNorm::forward(Matrix input) {
     }
     return output;
 }
+
+/* FIXME: incomplete implementation */
+Matrix LayerNorm::backward(Matrix grad) {
+    Matrix output(grad.rows, grad.cols);
+    // compute mean and variance of input for each sample in the batch
+    for (int i = 0; i < output.rows; i++) {
+        float mean = 0.0;
+        float variance = 0.0;
+        for (int j = 0; j < output.cols; j++) {
+            mean += grad(i,j);
+            variance += grad(i,j) * grad(i,j);
+        }
+        mean /= output.cols;
+        variance = variance / output.cols - mean * mean;
+
+        // normalize input using mean and variance
+        for (int j = 0; j < output.cols; j++) {
+            output(i,j) = (grad(i,j) - mean) / sqrt(variance + epsilon);
+        }
+
+        // apply scaling and shifting using gamma and beta
+        for (int j = 0; j < output.cols; j++) {
+            output(i,j) = gamma[j] * grad(i,j) + beta[j];
+        }
+    }
+    return output;
+}

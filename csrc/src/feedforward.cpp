@@ -47,7 +47,7 @@ Matrix FeedForwardLayer::forward(const Matrix &input)
 {
     // Pass input through the first linear layer
     std::cout << "linear input: " << input.rows << " " << input.cols << std::endl;
-    Matrix hidden = linear1.forward(input);
+    hidden = linear1.forward(input);
     std::cout << "linear hidden: " << hidden.rows << " " << hidden.cols << std::endl;
 
     // Apply activation function (e.g., ReLU) to the output of the first linear layer
@@ -64,6 +64,31 @@ Matrix FeedForwardLayer::forward(const Matrix &input)
     std::cout << "linear output: " << output.rows << " " << output.cols << std::endl;
 
     return output;
+}
+
+/**
+ * Backward pass of the feedforward layer
+ * Z = XW_1 + b_1
+ * H = ReLU(Z)
+ * Y = HW_2 + b_2
+ * Given dL/dY, dL/dH = dL/dY * W_2^T (output of linear backward), 
+ * dL/dZ = dL/dH * relu_prime(Z), relu has same function for both forward and backward
+ * dL/dX = dL/dZ * W_1^T
+ * dL/dW_1 = X^T * dL/dZ
+ * dL/db_1 = sum_rows(dL/dZ) similar to linear layer
+*/
+Matrix FeedForwardLayer::backward(const Matrix &grad) {
+    Matrix grad_relu = linear2.backward(grad);
+    std::cout << "linear2 backward output: " << grad_relu.rows << " " << grad_relu.cols << std::endl;
+    std::cout << "hidden layer shape: " << hidden.rows << " " << hidden.cols << std::endl;
+    for (int i = 0; i < hidden.rows; ++i)
+    {
+        for (int j = 0; j < hidden.cols; ++j)
+        {
+            grad_relu(i, j) = hidden(i, j) > 0 ? grad_relu(i, j) : 0;
+        }
+    }
+    return linear1.backward(grad_relu);
 }
 
 // int main()
