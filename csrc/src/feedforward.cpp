@@ -1,40 +1,14 @@
 #include <cmath>
 #include <iostream>
-#include <random>
-
 #include "../include/feedforward.h"
+#include "../include/common.h"
 
 FeedForwardLayer::FeedForwardLayer(int input_size, int hidden_size)
     : input_size(input_size), hidden_size(hidden_size),
     linear1(input_size, hidden_size), linear2(hidden_size, input_size){
 
-    // Random number engine and distribution
-    std::default_random_engine generator;                            // You can seed this with a fixed value or time-based seed
-    std::uniform_real_distribution<float> distribution(-0.1f, 0.1f); // Uniform distribution in the range [-0.1, 0.1]
-
-    for (int i = 0; i < input_size; ++i)
-    {
-        for (int j = 0; j < hidden_size; ++j)
-        {
-            linear1.weight(i, j) = distribution(generator); // Initialize with random value
-        }
-    }
-    for (int i = 0; i < hidden_size; ++i)
-    {
-        linear1.bias[i] = distribution(generator); // Initialize with random value
-    }
-
-    for (int i = 0; i < hidden_size; ++i)
-    {
-        for (int j = 0; j < input_size; ++j)
-        {
-            linear2.weight(i, j) = distribution(generator); // Initialize with random value
-        }
-    }
-    for (int i = 0; i < input_size; ++i)
-    {
-        linear2.bias[i] = distribution(generator); // Initialize with random value
-    }
+    linear1.reset();
+    linear2.reset();
 
     std::cout << "FeedForwardLayer::FeedForwardLayer()" << std::endl;
 }
@@ -51,13 +25,7 @@ Matrix FeedForwardLayer::forward(const Matrix &input)
     std::cout << "linear hidden: " << hidden.rows << " " << hidden.cols << std::endl;
 
     // Apply activation function (e.g., ReLU) to the output of the first linear layer
-    for (int i = 0; i < hidden.rows; ++i)
-    {
-        for (int j = 0; j < hidden.cols; ++j)
-        {
-            hidden(i, j) = std::max(0.0f, hidden(i, j));
-        }
-    }
+    common::relu(hidden);
 
     // Pass the result through the second linear layer
     Matrix output = linear2.forward(hidden);

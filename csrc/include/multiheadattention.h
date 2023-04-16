@@ -24,10 +24,20 @@ public:
             W_k.emplace_back(d_model, d_k);
             W_v.emplace_back(d_model, d_k);
         }
+        reset();
         std::cout << "MultiHeadAttention constructor" << std::endl;
     }
 
     ~MultiHeadAttention() {}
+
+    void reset() {
+        for (int i = 0; i < num_heads; ++i) {
+            W_q[i].reset();
+            W_k[i].reset();
+            W_v[i].reset();
+        }
+        W_o.reset();
+    }
 
     // Forward pass of the multi-head attention layer
     Matrix forward(const Matrix& X) {
@@ -38,7 +48,7 @@ public:
             Matrix V = X * W_v[h]; // n * d_v 
 
             Matrix attention_scores = Q * K.transponse(); // n * n
-            std::cout << "attention_scores shape: " << attention_scores.rows << " " << attention_scores.cols << std::endl;
+            // std::cout << "attention_scores shape: " << attention_scores.rows << " " << attention_scores.cols << std::endl;
 
             // softmax
             for (int i = 0; i < attention_scores.rows; ++i) {

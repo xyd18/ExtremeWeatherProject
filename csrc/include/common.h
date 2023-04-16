@@ -4,7 +4,10 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <assert.h>  
 #include "matrix.h"
+
+namespace common {
 
 /**
  * Lce = - allSamplesSUM( allClassesSUM( label * log( probablity ) ) ) / batchSize
@@ -13,7 +16,7 @@
  * by using 0 or 1 to indicate whether the token is correct.
  * So here, labels has the same shape as output.
 */
-float crossEntropyLoss(Matrix output, Matrix labels) {
+inline float crossEntropyLoss(Matrix output, Matrix labels) {
     int samples_size = output.rows;
     int numer_of_classes = output.cols;
     float cross_entropy_loss = 0.f;
@@ -27,7 +30,7 @@ float crossEntropyLoss(Matrix output, Matrix labels) {
     return cross_entropy_loss / samples_size;
 }
 
-void softmax(Matrix input) {
+inline void softmax(Matrix input) {
     for (int i = 0; i < input.rows; ++i) {
         float sum = 0.0f;
         for (int j = 0; j < input.cols; ++j) {
@@ -49,10 +52,10 @@ void softmax(Matrix input) {
  * output {x1, x2, x3}
  * CE = - (y1 * log(x1) + y2 * log(x2) + y3 * log(x3))
 */
-void gradientCrossEntropy(Matrix output, std::vector<float> labels, Matrix grad) {
+inline void gradientCrossEntropy(Matrix output, std::vector<float> labels, Matrix grad) {
     int samples_size = output.rows;
     int numer_of_classes = output.cols;
-    assert(grad.rows == samples_size && grad.cols == numer_of_classes);
+    assert (grad.rows == samples_size && grad.cols == numer_of_classes);
     /* FIXME: this is not correct, depend on our sentence input */
     Matrix labelExtend(samples_size, numer_of_classes);
     for(int i = 0;i < samples_size;i++) {
@@ -67,4 +70,21 @@ void gradientCrossEntropy(Matrix output, std::vector<float> labels, Matrix grad)
     return;
 }
 
+inline void gradientSoftmax(Matrix input, Matrix grad) {
+    for (int i = 0; i < input.rows; ++i) {
+        for (int j = 0; j < input.cols; ++j) {
+            grad(i, j) = input(i, j) * (1 - input(i, j));
+        }
+    }
+}
+
+inline void relu(Matrix input) {
+    for (int i = 0; i < input.rows; ++i) {
+        for (int j = 0; j < input.cols; ++j) {
+            input(i, j) = std::max(0.0f, input(i, j));
+        }
+    }
+}
+
+} // namespace common
 #endif

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <vector>
+#include <random>
 
 class Matrix {
 public:
@@ -24,6 +25,16 @@ public:
 
     ~Matrix() {
         // delete[] data; // FIXME: this line will cause double free, comment it out for now
+    }
+
+    void reset() {
+        // Random number engine and distribution
+        std::default_random_engine generator;                            // You can seed this with a fixed value or time-based seed
+        std::uniform_real_distribution<float> distribution(-0.1f, 0.1f); // Uniform distribution in the range [-0.1, 0.1]
+
+        for (int i = 0; i < rows * cols; ++i) {
+            data[i] = distribution(generator);
+        }
     }
 
     float& operator()(int row, int col) {
@@ -93,6 +104,19 @@ public:
 
     ~LinearLayer() {
         delete[] bias;
+    }
+
+    void reset() {
+        // Random number engine and distribution
+        std::default_random_engine generator;                            // You can seed this with a fixed value or time-based seed
+        std::uniform_real_distribution<float> distribution(-0.1f, 0.1f); // Uniform distribution in the range [-0.1, 0.1]
+
+        for (int i = 0; i < weight.rows * weight.cols; ++i) {
+            weight.data[i] = distribution(generator);
+        }
+        for (int i = 0; i < weight.cols; ++i) {
+            bias[i] = distribution(generator);
+        }
     }
 
     // Forward pass of the linear layer

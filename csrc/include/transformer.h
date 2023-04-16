@@ -2,6 +2,7 @@
 #define TRANSFORMER_H_
 
 #include <cmath>
+#include <chrono>
 #include "feedforward.h"
 #include "dropout.h"
 #include "matrix.h"
@@ -31,8 +32,12 @@ public:
         // Add and normalize (residual connection + layer normalization)
         Matrix attention_add_norm = attention_norm.forward(input + attention_output);
 
+        auto ffStart = std::chrono::system_clock::now(); // get the current time
         // Pass the result through the feedforward sublayer
         Matrix feedforward_output = feedforward_layer.forward(attention_add_norm);
+        auto ffEnd = std::chrono::system_clock::now();
+        std::chrono::duration<float> elapsed_seconds = ffEnd - ffStart;
+        printf("ff cost: %.6fs\n", elapsed_seconds.count());
 
         // Add and normalize (residual connection + layer normalization)
         Matrix output = feedforward_norm.forward(attention_add_norm + feedforward_output);
