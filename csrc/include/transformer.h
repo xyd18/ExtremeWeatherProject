@@ -18,7 +18,7 @@ public:
 
     // Constructor with specified input dimension, hidden dimension, number of heads, and output dimension
     TransformerEncoderLayer(int input_dim, int hidden_dim, int num_heads)
-        : multi_head_attention(input_dim, input_dim / num_heads, num_heads),
+        : multi_head_attention(input_dim, input_dim / num_heads, num_heads, 1, 0),
           feedforward_layer(input_dim, hidden_dim),
           feedforward_norm(hidden_dim, 1e-6f),
           attention_norm(hidden_dim, 1e-6f) {}

@@ -10,28 +10,40 @@ public:
     int num_heads;
     int d_k;
     int d_model;
+    int pid;
+    int nproc;
+    int heads_per_p;
+    bool hasWork; // record whether this process has work to do in MHAL
     std::vector<Matrix> W_q;
     std::vector<Matrix> W_k;
     std::vector<Matrix> W_v;
     Matrix W_o;
 
-    MultiHeadAttention(int d_model, int d_k, int num_heads) : d_model(d_model), num_heads(num_heads), d_k(d_k), W_o(d_model, d_model) {
-        W_q.reserve(num_heads);
-        W_k.reserve(num_heads);
-        W_v.reserve(num_heads);
-        for (int i = 0; i < num_heads; ++i) {
-            W_q.emplace_back(d_model, d_k);
-            W_k.emplace_back(d_model, d_k);
-            W_v.emplace_back(d_model, d_k);
+    MultiHeadAttention(int d_model, int d_k, int num_heads, int nproc, int pid) 
+        : d_model(d_model), num_heads(num_heads), d_k(d_k), W_o(d_k * std::max(num_heads / nproc, 1), d_model),
+        pid(pid), nproc(nproc), heads_per_p(std::max(num_heads / nproc, 1)) {
+        hasWork = pid * heads_per_p <= num_heads - heads_per_p;
+        if(hasWork) {
+            W_q.reserve(heads_per_p);
+            W_k.reserve(heads_per_p);
+            W_v.reserve(heads_per_p);
+            for (int i = 0; i < heads_per_p; ++i) {
+                W_q.emplace_back(d_model, d_k);
+                W_k.emplace_back(d_model, d_k);
+                W_v.emplace_back(d_model, d_k);
+            }
+            reset();
+            std::cout << "[MultiHeadAttention constructor] Worker " << pid << ", heads: " << heads_per_p << std::endl;
+        }else{
+            std::cout << "[MultiHeadAttention constructor] Worker " << pid << " does not have work in MHAL" << std::endl;
         }
-        reset();
-        std::cout << "MultiHeadAttention constructor" << std::endl;
     }
 
     ~MultiHeadAttention() {}
 
     void reset() {
-        for (int i = 0; i < num_heads; ++i) {
+        if(!hasWork) return;
+        for (int i = 0; i < heads_per_p; ++i) {
             W_q[i].reset();
             W_k[i].reset();
             W_v[i].reset();
@@ -41,8 +53,9 @@ public:
 
     // Forward pass of the multi-head attention layer
     Matrix forward(const Matrix& X) {
-        Matrix concat_heads(X.rows, d_model);
-        for (int h = 0; h < num_heads; ++h) {
+        if(!hasWork) return Matrix(0, 0); // FIXME: this is errorneous if nproc > num_heads, need a sub group of the world
+        Matrix concat_heads(X.rows, d_k * heads_per_p);
+        for (int h = 0; h < heads_per_p; ++h) {
             Matrix Q = X * W_q[h]; // n * d_k
             Matrix K = X * W_k[h]; // n * d_k
             Matrix V = X * W_v[h]; // n * d_v 
@@ -50,7 +63,7 @@ public:
             Matrix attention_scores = Q * K.transponse(); // n * n
             // std::cout << "attention_scores shape: " << attention_scores.rows << " " << attention_scores.cols << std::endl;
 
-            // softmax
+            // scaled + softmax
             for (int i = 0; i < attention_scores.rows; ++i) {
                 float sum = 0.0f;
                 for (int j = 0; j < attention_scores.cols; ++j) {

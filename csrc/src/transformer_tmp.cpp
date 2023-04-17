@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <assert.h>
 #include "../include/transformer_tmp.h"
 
 int main(int argc, char *argv[]) {
@@ -17,9 +18,12 @@ int main(int argc, char *argv[]) {
     int hidden_dim = 2048; // Dimension of hidden representation
     int output_dim = 32;  // Dimension of output representation
     int batch_size = 10;  // Number of input samples in the batch
+    int num_heads = 8;    // Number of heads in the multi-head attention sublayer
+    assert (hidden_dim % nproc == 0);
+    assert (nproc > num_heads || num_heads % nproc == 0);
     std::cout << "==================Transformer Encoder Layer==================" << std::endl;
     // Instantiate FeedForwardLayer with specified input, hidden, and output dimensions
-    TransformerEncoderLayerTMP transformer(input_dim, hidden_dim, 8, pid, nproc);
+    TransformerEncoderLayerTMP transformer(input_dim, hidden_dim, num_heads, pid, nproc);
     std::cout << "Transformer Encoder Layer initialized" << std::endl;
 
     // Input matrix (batch size = batch_size, input dimension = input_dim)

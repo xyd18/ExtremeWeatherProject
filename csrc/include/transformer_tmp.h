@@ -21,7 +21,7 @@ public:
 
     // Constructor with specified input dimension, hidden dimension, number of heads, and output dimension
     TransformerEncoderLayerTMP(int input_dim, int hidden_dim, int num_heads, int pid, int nproc)
-        : multi_head_attention(input_dim, input_dim / num_heads, num_heads),
+        : multi_head_attention(input_dim, input_dim / num_heads, num_heads, nproc, pid),
           pid(pid), nproc(nproc),
           feedforward_layer(input_dim, hidden_dim, pid, nproc),
           feedforward_norm(hidden_dim, 1e-6f),
@@ -29,17 +29,15 @@ public:
 
     // Forward pass of the transformer encoder layer
     Matrix forward(const Matrix& input) {
-        Matrix ff_input;
-        int ff_input_size[2];
-        if(pid == 0) {
-            // Pass input through the multi-head attention sublayer
-            Matrix attention_output = multi_head_attention.forward(input);
-            std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
-             // Add and normalize (residual connection + layer normalization)
-            ff_input = attention_norm.forward(input + attention_output);
-            ff_input_size[0] = ff_input.rows;
-            ff_input_size[1] = ff_input.cols;
-        }
+        // Pass input through the multi-head attention sublayer
+        Matrix attention_output = multi_head_attention.forward(input);
+        std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
+        Matrix attention_output_global = Matrix(attention_output.rows, attention_output.cols);
+        MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        // Add and normalize (residual connection + layer normalization)
+        Matrix ff_input = attention_norm.forward(input + attention_output_global);
+        int ff_input_size[2] = { ff_input.rows, ff_input.cols };
+        
         auto ffStart = std::chrono::system_clock::now(); // get the current time
 
         // broadcast input to all processes
@@ -51,7 +49,7 @@ public:
         // gather output from all processes
         Matrix ff_output_reduce(ff_output.rows, ff_output.cols);
         MPI_Allreduce(ff_output.data, ff_output_reduce.data, ff_output.rows * ff_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-
+        
         auto ffEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = ffEnd - ffStart;
         printf("[Worker %d] ff cost: %.6fs\n", pid, elapsed_seconds.count());
