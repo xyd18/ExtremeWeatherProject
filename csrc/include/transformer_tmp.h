@@ -29,11 +29,16 @@ public:
 
     // Forward pass of the transformer encoder layer
     Matrix forward(const Matrix& input) {
+        auto mhaStart = std::chrono::system_clock::now();
         // Pass input through the multi-head attention sublayer
         Matrix attention_output = multi_head_attention.forward(input);
         std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
         Matrix attention_output_global = Matrix(attention_output.rows, attention_output.cols);
         MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto mhaEnd = std::chrono::system_clock::now();
+        std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
+        printf("[Worker %d] multihead attention forward cost: %.6fs\n", pid, mha_forward_seconds.count());
+
         // Add and normalize (residual connection + layer normalization)
         // DESIGN: accroding megatron LM, LN, Residuals computation are duplicated and optimzied inidividually in each process, instead of one process + broadcast
         Matrix ff_input = attention_norm.forward(input + attention_output_global);
@@ -59,6 +64,11 @@ public:
 
         // Add and normalize (residual connection + layer normalization)
         Matrix output = feedforward_norm.forward(ff_input + ff_output_reduce);
+
+        auto ffnEnd = std::chrono::system_clock::now();
+
+        std::chrono::duration<float> total_seconds = ffnEnd - mhaStart;
+        printf("[Worker %d] total cost: %.6fs\n", pid, total_seconds.count());
 
         return output;
     }
