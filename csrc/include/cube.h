@@ -45,23 +45,53 @@ public:
         return data[batch * rows * cols + row * cols + col];
     }
 
-    const float& operator()(int row, int col) const {
+    const float& operator()(int batch, int row, int col) const {
         return data[batch * rows * cols + row * cols + col];
     }
 
+    /* Matrix multiplication along the last dimension
+     * Input shape: (batch_size, seq_length, input_size) = (batch_size, rows, cols)
+     * Weight shape: (input_size, output_size) = (other.rows, other.cols)
+     * Output shape: (batch_size, seq_length, output_size) = (batch_size, rows, other.cols)
+     */
+    Cube operator*(const Matrix& other) const {
+
+        if (cols != other.rows) {
+            throw std::runtime_error("Cube dimensions do not match for multiplication.");
+        }
+
+        Cube result(batch_size, rows, other.cols);
+        for (int b = 0; b < batch_size; ++b) {
+            for (int s = 0; s < rows; ++s) {
+                for (int i = 0; i < cols; ++i) {
+                    for (int o = 0; o < other.cols; ++o) {
+                        result(b,s,o) += (*this)(b, s, i) * other(i, o);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     // Multiply two matrices within the cube along the rows and columns
+    // Input shape: (batch_size, seq_length_a, input_size)
+    // Other shape: (batch_size, input_size, seq_length_b)
+    // Output shape: (batch_size, seq_length_a, seq_length_b)
     Cube operator*(const Cube& other) const {
         if (batch_size != other.batch_size || cols != other.rows) {
             throw std::runtime_error("Cube dimensions do not match for multiplication.");
         }
 
         Cube result(batch_size, rows, other.cols);
-        for (int b = 0; b < batch_size; ++b) {
+        // Perform batched matrix multiplication
+        for (int batch = 0; batch < batch_size; ++batch) {
             for (int i = 0; i < rows; ++i) {
                 for (int j = 0; j < other.cols; ++j) {
+                    float sum = 0.0;
                     for (int k = 0; k < cols; ++k) {
-                        result(b, i, j) += (*this)(b, i, k) * other(b, k, j);
+                        sum += (*this)(batch, i, k) * other(batch,k,j);
                     }
+                    result(batch,i,j) = sum;
                 }
             }
         }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <assert.h>  
 #include "matrix.h"
+#include "cube.h"
 
 namespace common {
 
@@ -101,6 +102,18 @@ inline void reluBackward(Matrix grad, Matrix input) {
             grad(i, j) = input(i, j) > 0 ? grad(i, j) : 0;
         }
     }
+}
+
+
+inline void relu_cube(Cube input) {
+    for (int b = 0; b < input.batch_size; ++b) {
+        for (int i = 0; i < input.rows; ++i) {
+            for (int j = 0; j < input.cols; ++j) {
+                input(b, i, j) = std::max(0.0f, input(b, i, j));
+            }
+        }
+    }
+    
 }
 
 } // namespace common
