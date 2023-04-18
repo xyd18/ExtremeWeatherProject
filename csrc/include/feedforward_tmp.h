@@ -43,6 +43,17 @@ class FeedForwardLayerTMP {
             // std::cout << "[FeedForwardLayerTMP, W" << pid << "] output shape: " << output.rows << " " << output.cols << std::endl;
             return output;
         }
+
+        Matrix backward(const Matrix& grad) {
+            std::cout << "===================Feed Forward Backward===================" << std::endl;
+            std::cout << "grad shape: " << grad.rows << " " << grad.cols << std::endl;
+            Matrix grad_relu = linear2.backward(grad);
+            std::cout << "linear2 backward output: " << grad_relu.rows << " " << grad_relu.cols << std::endl;
+            std::cout << "hidden layer shape: " << hidden.rows << " " << hidden.cols << std::endl;
+            common::reluBackward(grad_relu, hidden);
+            std::cout << "relu backward output: " << grad_relu.rows << " " << grad_relu.cols << std::endl;
+            return linear1.backward(grad_relu);
+        }
 };
 
 #endif

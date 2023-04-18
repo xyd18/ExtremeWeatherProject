@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <assert.h>
+#include <random>
 #include "../include/transformer_tmp.h"
 
 int main(int argc, char *argv[]) {
@@ -16,7 +17,6 @@ int main(int argc, char *argv[]) {
     // Parameters for demonstration purposes
     int input_dim = 512;   // Dimension of input representation
     int hidden_dim = 2048; // Dimension of hidden representation
-    int output_dim = 32;  // Dimension of output representation
     int batch_size = 10;  // Number of input samples in the batch
     int num_heads = 8;    // Number of heads in the multi-head attention sublayer
     assert (hidden_dim % nproc == 0);
@@ -30,12 +30,22 @@ int main(int argc, char *argv[]) {
     Matrix input(batch_size, input_dim);
     std::cout << "Input shape: (" << input.rows << ", " << input.cols << ")" << std::endl;
 
-    // Forward pass through the feedforward layer
+    // Forward pass
     Matrix output = transformer.forward(input);
-
-    // Output shape should be (batch_size, output_dim)
     std::cout << "Output shape: (" << output.rows << ", " << output.cols << ")" << std::endl;
 
+    // random labels :)
+    std::vector<int> labels(batch_size);
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
+    for(int i = 0; i < batch_size; i++) {
+        labels[i] = distribution(generator);
+    }
+    Matrix dO = common::softMaxCrossEntropyBackward(output, labels);
+
+    // Backward pass
+    Matrix dI = transformer.backward(dO);
+    std::cout << "dI shape: (" << dI.rows << ", " << dI.cols << ")" << std::endl;
     // Finalize MPI
     MPI_Finalize();
 }

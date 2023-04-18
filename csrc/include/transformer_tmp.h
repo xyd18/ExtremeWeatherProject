@@ -35,15 +35,17 @@ public:
         Matrix attention_output_global = Matrix(attention_output.rows, attention_output.cols);
         MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         // Add and normalize (residual connection + layer normalization)
+        // DESIGN: accroding megatron LM, LN, Residuals computation are duplicated and optimzied inidividually in each process, instead of one process + broadcast
         Matrix ff_input = attention_norm.forward(input + attention_output_global);
         int ff_input_size[2] = { ff_input.rows, ff_input.cols };
         
         auto ffStart = std::chrono::system_clock::now(); // get the current time
 
         // broadcast input to all processes
-        MPI_Bcast(&ff_input_size[0], 2, MPI_INT, 0, MPI_COMM_WORLD);
-        if(pid != 0) ff_input = Matrix(ff_input_size[0], ff_input_size[1]);
-        MPI_Bcast(ff_input.data, ff_input_size[0] * ff_input_size[1], MPI_FLOAT, 0, MPI_COMM_WORLD);
+        // MPI_Bcast(&ff_input_size[0], 2, MPI_INT, 0, MPI_COMM_WORLD);
+        // if(pid != 0) ff_input = Matrix(ff_input_size[0], ff_input_size[1]);
+        // MPI_Bcast(ff_input.data, ff_input_size[0] * ff_input_size[1], MPI_FLOAT, 0, MPI_COMM_WORLD);
+
         // Pass the result through the feedforward sublayer
         Matrix ff_output = feedforward_layer.forward(ff_input);
         // gather output from all processes
@@ -59,6 +61,19 @@ public:
         Matrix output = feedforward_norm.forward(ff_input + ff_output_reduce);
 
         return output;
+    }
+
+    // Backward pass of the transformer encoder layer
+    Matrix backward(const Matrix& dO) {
+        Matrix dFeedforward = feedforward_norm.backward(dO);
+
+        Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
+
+        Matrix dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
+        
+        Matrix dAttention = multi_head_attention.backward(dAttentionAddNorm);
+
+        return dAttention;
     }
 };
 

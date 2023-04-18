@@ -6,9 +6,15 @@
 class LayerNorm {
 private:
     int hidden_size;
+    float epsilon;
     float* gamma;
     float* beta;
-    float epsilon;
+    Matrix xmu_cache;
+    Matrix var_cache;
+    Matrix ivar_cache;
+    Matrix sqrtvar_cache;
+    Matrix xhat_cache;
+    Matrix x_cache;
 
 public:
     LayerNorm(int hidden_size, float epsilon);

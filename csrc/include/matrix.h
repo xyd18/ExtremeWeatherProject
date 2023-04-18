@@ -75,7 +75,21 @@ public:
         return result;
     }
 
-    Matrix transponse() const {
+    // Element-wise minus of two matrices
+    Matrix operator-(const Matrix& other) const {
+        if (rows != other.rows || cols != other.cols) {
+            throw std::runtime_error("Matrix dimensions do not match for addition.");
+        }
+        Matrix result(rows, cols);
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                result(i, j) = (*this)(i, j) - other(i, j);
+            }
+        }
+        return result;
+    }
+
+    Matrix transpose() const {
         Matrix result(cols, rows);
         for (int i = 0; i < rows; ++i) {
             for (int j = 0; j < cols; ++j) {
@@ -145,9 +159,9 @@ public:
     Matrix backward(const Matrix& grad) {
         // Compute gradient w.r.t. weight
         std::cout << "Linear Backward" << std::endl;
-        std::cout << "Input: " << inputCopy.rows << "x" << inputCopy.cols << std::endl;
-        std::cout << "Grad: " << grad.rows << "x" << grad.cols << std::endl;
-        Matrix grad_weight = inputCopy.transponse() * grad;
+        std::cout << "Input cache: " << inputCopy.rows << "x" << inputCopy.cols << std::endl;
+        std::cout << "input Grad: " << grad.rows << "x" << grad.cols << std::endl;
+        Matrix grad_weight = inputCopy.transpose() * grad;
 
         // Compute gradient w.r.t. bias
         std::vector<float> grad_bias(grad.cols, 0.f);
@@ -160,7 +174,7 @@ public:
         }
 
         // Compute gradient w.r.t. input
-        Matrix grad_x = grad * weight.transponse();
+        Matrix grad_x = grad * weight.transpose();
 
         // Update weights and biases
         for(int i = 0;i < weight.rows; i++) {
@@ -171,7 +185,7 @@ public:
         for (int i = 0; i < grad.cols; ++i) {
             bias[i] += grad_bias[i]; // FIXME: += ?
         }
-
+        std::cout << "output grad: " << grad_x.rows << "x" << grad_x.cols << std::endl;
         return grad_x;
     }
 };

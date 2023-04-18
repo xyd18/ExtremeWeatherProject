@@ -14,16 +14,20 @@ namespace common {
  * Here, a sample is a token in the sequence, input size is n * d_model
  * our label is that for each position, there is a correct token here. We expand it to n * d_model,
  * by using 0 or 1 to indicate whether the token is correct.
- * So here, labels has the same shape as output.
+ * So here, labels need to be one-hot to the same shape as output.
 */
-inline float crossEntropyLoss(Matrix output, Matrix labels) {
+inline float crossEntropyLoss(Matrix output, std::vector<int> &labels) {
     int samples_size = output.rows;
     int numer_of_classes = output.cols;
+    Matrix labels_one_hot = Matrix(samples_size, numer_of_classes);
+    for(int i = 0;i < samples_size; i++) {
+        labels_one_hot(i, labels[i]) = 1.f;
+    }
     float cross_entropy_loss = 0.f;
     for(int i = 0; i < samples_size; i++) {
         float loss = 0.f;
         for(int j = 0; j < numer_of_classes;j++) {
-            loss += labels(i, j) * std::log(output(i, j));
+            loss += labels_one_hot(i, j) * std::log(output(i, j));
         }
         cross_entropy_loss -= loss;
     }
@@ -44,44 +48,57 @@ inline void softmax(Matrix input) {
 }
 
 /**
- * Backward pass of the cross entropy loss.For a given output token at position t, 
+ * Backward pass of softmax + cross entropy loss.For a given output token at position t, 
  * the gradient of the loss with respect to the output token is simply the difference 
  * between the predicted probability distribution and the target probability distribution
- * at that position FIXME: not entirely sure about this
- * 
- * output {x1, x2, x3}
- * CE = - (y1 * log(x1) + y2 * log(x2) + y3 * log(x3))
+ * at that position. Details of derivation: https://deepnotes.io/softmax-crossentropy
 */
-inline void gradientCrossEntropy(Matrix output, std::vector<float> labels, Matrix grad) {
+inline Matrix softMaxCrossEntropyBackward(Matrix output, std::vector<int> &labels) {
+    std::cout << "===================SoftmaxCrossEntropyBackward===================" << std::endl;
+    std::cout << "output: " << output.rows << " " << output.cols << std::endl;
+    std::cout << "labels: " << labels.size() << std::endl;
     int samples_size = output.rows;
     int numer_of_classes = output.cols;
-    assert (grad.rows == samples_size && grad.cols == numer_of_classes);
-    /* FIXME: this is not correct, depend on our sentence input */
-    Matrix labelExtend(samples_size, numer_of_classes);
-    for(int i = 0;i < samples_size;i++) {
-        labelExtend(i, labels[i]) = 1.f;
+    Matrix grad(samples_size, numer_of_classes);
+
+    Matrix labels_one_hot = Matrix(samples_size, numer_of_classes);
+    for(int i = 0;i < samples_size; i++) {
+        labels_one_hot(i, labels[i]) = 1.f;
     }
     
     for(int i = 0; i < samples_size; i++) {
         for(int j = 0; j < numer_of_classes;j++) {
-            grad(i, j) = output(i, j) - labelExtend(i, j);
+            grad(i, j) = output(i, j) - labels_one_hot(i, j);
         }
     }
-    return;
+    std::cout << "output grad: " << grad.rows << " " << grad.cols << std::endl;
+    return grad;
 }
 
-inline void gradientSoftmax(Matrix input, Matrix grad) {
+inline Matrix softmaxBackward(Matrix input) {
+    Matrix grad(input.rows, input.cols);
     for (int i = 0; i < input.rows; ++i) {
         for (int j = 0; j < input.cols; ++j) {
             grad(i, j) = input(i, j) * (1 - input(i, j));
         }
     }
+    return grad;
 }
 
 inline void relu(Matrix input) {
     for (int i = 0; i < input.rows; ++i) {
         for (int j = 0; j < input.cols; ++j) {
             input(i, j) = std::max(0.0f, input(i, j));
+        }
+    }
+}
+
+inline void reluBackward(Matrix grad, Matrix input) {
+    for (int i = 0; i < input.rows; ++i)
+    {
+        for (int j = 0; j < input.cols; ++j)
+        {
+            grad(i, j) = input(i, j) > 0 ? grad(i, j) : 0;
         }
     }
 }

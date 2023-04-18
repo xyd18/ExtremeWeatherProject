@@ -44,6 +44,19 @@ public:
 
         return output;
     }
+
+    // Backward pass of the transformer encoder layer
+    Matrix backward(const Matrix& dO) {
+        Matrix dFeedforward = feedforward_norm.backward(dO);
+
+        Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
+
+        Matrix dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
+        
+        Matrix dAttention = multi_head_attention.backward(dAttentionAddNorm);
+
+        return dAttention;
+    }
 };
 
 #endif

@@ -26,7 +26,7 @@ prog = 'transformer-release-' + version
 #     workers = [4, 8] if version == 'tmp' else [1, 4]
 # elif machine == '-psc':
 #     workers = [16, 128] if version == 'tmp' else [16,121]
-worker = 4
+worker = 4 if version == 'tmp' else 1
 
 os.system('mkdir -p logs')
 os.system('rm -rf logs/*')

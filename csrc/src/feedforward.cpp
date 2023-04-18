@@ -44,18 +44,25 @@ Matrix FeedForwardLayer::forward(const Matrix &input)
  * dL/dX = dL/dZ * W_1^T
  * dL/dW_1 = X^T * dL/dZ
  * dL/db_1 = sum_rows(dL/dZ) similar to linear layer
+ * 
+ * Y = X * W1 + b1, Z = max(0, Y), O = Z * W2 + b2 
+ * Matrix dO = dout;
+    db2 = dO.sum_axis(0, 1);
+    dW2 = Z.transpose().dot(dO);
+    dZ = dO.dot(W2.transpose());
+    dY = dZ.relu_backward(Y);
+    db1 = dY.sum_axis(0, 1);
+    dW1 = X.transpose().dot(dY);
+    return dY.dot(W1.transpose());
 */
 Matrix FeedForwardLayer::backward(const Matrix &grad) {
+    std::cout << "===================Feed Forward Backward===================" << std::endl;
+    std::cout << "grad shape: " << grad.rows << " " << grad.cols << std::endl;
     Matrix grad_relu = linear2.backward(grad);
     std::cout << "linear2 backward output: " << grad_relu.rows << " " << grad_relu.cols << std::endl;
     std::cout << "hidden layer shape: " << hidden.rows << " " << hidden.cols << std::endl;
-    for (int i = 0; i < hidden.rows; ++i)
-    {
-        for (int j = 0; j < hidden.cols; ++j)
-        {
-            grad_relu(i, j) = hidden(i, j) > 0 ? grad_relu(i, j) : 0;
-        }
-    }
+    common::reluBackward(grad_relu, hidden);
+    std::cout << "relu backward output: " << grad_relu.rows << " " << grad_relu.cols << std::endl;
     return linear1.backward(grad_relu);
 }
 
