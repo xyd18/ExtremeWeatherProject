@@ -1,6 +1,6 @@
 #### [Back to Peoject Page](../index.md)
 
-## Milestone Report: Parallelizing Transformer with Model and Pipeline Parallelism
+## Milestone Report: Parallelizing Transformer with Model, Tensor Model and Pipeline Parallelism
 
 Team Name: Extreme Weather
 
