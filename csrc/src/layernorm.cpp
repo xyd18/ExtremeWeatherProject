@@ -2,9 +2,8 @@
 
 #include "../include/layernorm.h"
 
-LayerNorm::LayerNorm(int hidden_size, float epsilon) {
-    hidden_size = hidden_size;
-    epsilon = epsilon; // 1e-5 would be a good default value
+LayerNorm::LayerNorm(int hidden_size, float epsilon=1e-5) :
+    hidden_size(hidden_size), epsilon(epsilon) {
     gamma = new float[hidden_size];
     beta = new float[hidden_size];
     // initialize gamma and beta to ones and zeros, respectively
