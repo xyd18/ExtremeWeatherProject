@@ -6,7 +6,7 @@ int main() {
     // Parameters for demonstration purposes
     int input_dim = 512;   // Dimension of input representation
     int hidden_dim = 2048; // Dimension of hidden representation
-    int batch_size = 10;  // Number of input samples in the batch
+    int batch_size = 32;  // Number of input samples in the batch
     std::cout << "==================Transformer Encoder Layer==================" << std::endl;
     // Instantiate FeedForwardLayer with specified input, hidden, and output dimensions
     TransformerEncoderLayer transformer(input_dim, hidden_dim, 8);

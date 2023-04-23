@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     // Parameters for demonstration purposes
     int input_dim = 512;   // Dimension of input representation
     int hidden_dim = 2048; // Dimension of hidden representation
-    int batch_size = 10;  // Number of input samples in the batch
+    int batch_size = 32;  // Number of input samples in the batch
     int num_heads = 8;    // Number of heads in the multi-head attention sublayer
     assert (hidden_dim % nproc == 0);
     assert (nproc > num_heads || num_heads % nproc == 0);
