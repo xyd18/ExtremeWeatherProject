@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
     Cube input(batch_size, seq_length, input_dim);
-    std::cout << "Input shape: (" << input.rows << ", " << input.cols << ")" << std::endl;
+    std::cout << "Input shape: (" << input.batch_size << ", " << input.rows << ", " << input.cols << ")" << std::endl;
 
     // Forward pass
     Cube output = transformer.forward(input);
