@@ -16,7 +16,7 @@ endif
 COMMON_SOURCES :=
 HEADERS := csrc/include/*.h
 
-TARGETBIN := transformer-$(CONFIGURATION)-seq transformer-$(CONFIGURATION)-tmp transformer-$(CONFIGURATION)-cube
+TARGETBIN := transformer-$(CONFIGURATION)-seq transformer-$(CONFIGURATION)-tmp transformer-$(CONFIGURATION)-cube transformer-$(CONFIGURATION)-tmp-cube
 
 .SUFFIXES:
 .PHONY: all clean
@@ -32,6 +32,8 @@ transformer-$(CONFIGURATION)-tmp: $(HEADERS) $(COMMON_SOURCES) csrc/src/transfor
 transformer-$(CONFIGURATION)-cube: $(HEADERS) $(COMMON_SOURCES) csrc/src/transformer_cube.cpp
 	$(CXX) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_cube.cpp
 
+transformer-$(CONFIGURATION)-tmp-cube: $(HEADERS) $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
+	$(CXX) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
 
 format:
 	clang-format -i csrc/src/*.cpp csrc/include/*.h
