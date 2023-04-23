@@ -34,7 +34,7 @@ public:
         Cube attention_output = multi_head_attention.forward(input);
         std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
         Cube attention_output_global = Cube(attention_output.batch_size, attention_output.rows, attention_output.cols);
-        MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.batch_size * attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         auto mhaEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
         printf("[Worker %d] multihead attention forward cost: %.6fs\n", pid, mha_forward_seconds.count());
@@ -55,7 +55,7 @@ public:
         Cube ff_output = feedforward_layer.forward(ff_input);
         // gather output from all processes
         Cube ff_output_reduce(ff_output.batch_size, ff_output.rows, ff_output.cols);
-        MPI_Allreduce(ff_output.data, ff_output_reduce.data, ff_output.rows * ff_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(ff_output.data, ff_output_reduce.data, ff_output.batch_size * ff_output.rows * ff_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         
         auto ffEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = ffEnd - ffStart;
