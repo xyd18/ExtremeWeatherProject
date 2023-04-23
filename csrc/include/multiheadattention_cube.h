@@ -34,9 +34,13 @@ public:
                 W_v.emplace_back(d_model, d_k);
             }
             reset();
+#ifdef DEBUG
             std::cout << "[MultiHeadAttention constructor] Worker " << pid << ", heads: " << heads_per_p << std::endl;
+#endif
         }else{
+#ifdef DEBUG
             std::cout << "[MultiHeadAttention constructor] Worker " << pid << " does not have work in MHAL" << std::endl;
+#endif
         }
     }
 

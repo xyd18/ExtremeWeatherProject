@@ -10,16 +10,18 @@ int main() {
     std::cout << "==================Transformer Encoder Layer==================" << std::endl;
     // Instantiate FeedForwardLayer with specified input, hidden, and output dimensions
     TransformerEncoderLayer transformer(input_dim, hidden_dim, 8);
-    std::cout << "Transformer Encoder Layer initialized" << std::endl;
     
     // Input matrix (batch size = batch_size, input dimension = input_dim)
     Matrix input(batch_size, input_dim);
-    std::cout << "Input shape: (" << input.rows << ", " << input.cols << ")" << std::endl;
+#ifdef DEBUG
+    printf("TransformerEncoderLayer input size: (batch_size=%d, d_model=%d)\n", input.rows, input.cols);
+#endif
 
     // Forward pass through the feedforward layer
     Matrix output = transformer.forward(input);
-    std::cout << "Output shape: (" << output.rows << ", " << output.cols << ")" << std::endl;
-
+#ifdef DEBUG
+    printf("TransformerEncoderLayer Output size: (batch_size=%d, d_model=%d)\n", output.rows, output.cols);
+#endif
     // random labels :)
     std::vector<int> labels(batch_size);
     std::default_random_engine generator;

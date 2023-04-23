@@ -32,7 +32,9 @@ public:
         auto mhaStart = std::chrono::system_clock::now();
         // Pass input through the multi-head attention sublayer
         Cube attention_output = multi_head_attention.forward(input);
-        std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
+#ifdef DEBUG
+        printf("TransformerEncoderLayerTMP_CUBE::forward attention_output shape: (batch_size=%d, seq_len=%d, d_model=%d)\n",attention_output.batch_size, attention_output.rows, attention_output.cols);
+#endif
         Cube attention_output_global = Cube(attention_output.batch_size, attention_output.rows, attention_output.cols);
         MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.batch_size * attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         auto mhaEnd = std::chrono::system_clock::now();

@@ -1,45 +1,49 @@
 OUTPUTDIR := bin/
-
-# CFLAGS := -std=c++14 -fvisibility=hidden -lpthread -g -p -fno-omit-frame-pointer
 CFLAGS := -std=c++14 -fvisibility=hidden -lpthread -Wall -Wextra
 
-ifeq (,$(CONFIGURATION))
-	CONFIGURATION := release
-endif
+# Define different compilers for different targets
+CXX_SEQ := $(CXX)
+CXX_MPI := mpic++
 
-ifeq (debug,$(CONFIGURATION))
-CFLAGS += -g
-else
-CFLAGS += -O2
-endif
-
-COMMON_SOURCES :=
 HEADERS := csrc/include/*.h
+COMMON_SOURCES :=
+TARGETS := transformer-seq transformer-cube transformer-tmp transformer_tmp-cube
+# TARGETS := transformer-seq transformer-cube
 
-TARGETBIN := transformer-$(CONFIGURATION)-seq transformer-$(CONFIGURATION)-tmp transformer-$(CONFIGURATION)-cube transformer-$(CONFIGURATION)-tmp-cube
+# Default build target
+.PHONY: all debug release clean format check
+all: release
 
-.SUFFIXES:
-.PHONY: all clean
+# Rule for debug version
+debug: CFLAGS += -O2 -DDEBUG
+debug: $(addprefix $(OUTPUTDIR)debug-,$(TARGETS))
 
-all: $(TARGETBIN)
+# Rule for release version
+release: CFLAGS += -O2
+release: $(addprefix $(OUTPUTDIR)release-,$(TARGETS))
 
-transformer-$(CONFIGURATION)-seq: $(HEADERS) csrc/src/transformer.cpp
-	$(CXX) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer.cpp
+# General rules for building targets with specific compilers
+$(OUTPUTDIR)debug-transformer-seq $(OUTPUTDIR)release-transformer-seq: $(HEADERS) csrc/src/transformer.cpp
+	@mkdir -p $(OUTPUTDIR)
+	$(CXX_SEQ) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer.cpp
 
-transformer-$(CONFIGURATION)-tmp: $(HEADERS) $(COMMON_SOURCES) csrc/src/transformer_tmp.cpp
-	mpic++ -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp.cpp
+$(OUTPUTDIR)debug-transformer-cube $(OUTPUTDIR)release-transformer-cube: $(HEADERS) csrc/src/transformer_cube.cpp
+	@mkdir -p $(OUTPUTDIR)
+	$(CXX_SEQ) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_cube.cpp
 
-transformer-$(CONFIGURATION)-cube: $(HEADERS) $(COMMON_SOURCES) csrc/src/transformer_cube.cpp
-	$(CXX) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_cube.cpp
+$(OUTPUTDIR)debug-transformer-tmp $(OUTPUTDIR)release-transformer-tmp: $(HEADERS) csrc/src/transformer_tmp.cpp
+	@mkdir -p $(OUTPUTDIR)
+	$(CXX_MPI) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp.cpp
 
-transformer-$(CONFIGURATION)-tmp-cube: $(HEADERS) $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
-	mpic++ -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
+$(OUTPUTDIR)debug-transformer-tmp-cube $(OUTPUTDIR)release-transformer-tmp-cube: $(HEADERS) csrc/src/transformer_tmp_cube.cpp
+	@mkdir -p $(OUTPUTDIR)
+	$(CXX_MPI) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
 
 format:
 	clang-format -i csrc/src/*.cpp csrc/include/*.h
 
 clean:
-	rm -rf ./transformer-$(CONFIGURATION)*
+	rm -rf $(OUTPUTDIR)
 
 check:	default
 	./checker.py

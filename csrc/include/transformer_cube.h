@@ -32,8 +32,6 @@ public:
         std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
         printf("multihead attention forward cost: %.6fs\n", mha_forward_seconds.count());
 
-        std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
-
         // Add and normalize (residual connection + layer normalization)
         Cube attention_add_norm = attention_norm.forward(input + attention_output);
 

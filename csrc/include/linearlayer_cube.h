@@ -17,7 +17,6 @@ public:
         for (int i = 0; i < output_dim; ++i) {
             bias[i] = 0.0f;
         }
-        std::cout << "Linear layer initialized with input dimension " << input_dim << " and output dimension " << output_dim << std::endl;
     }
 
     ~LinearLayer_cube() {

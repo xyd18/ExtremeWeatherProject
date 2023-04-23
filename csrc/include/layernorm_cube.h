@@ -21,8 +21,9 @@ public:
             gamma[i] = 1.0;
             beta[i] = 0.0;
         }
-
-        std::cout << "LayerNorm_cube::LayerNorm_cube() " << hidden_size << std::endl;
+#ifdef DEBUG
+        printf("LayerNorm_cube::LayerNorm_cube(hidden_size=%d)\n", hidden_size);
+#endif
     }
 
     ~LayerNorm_cube() {

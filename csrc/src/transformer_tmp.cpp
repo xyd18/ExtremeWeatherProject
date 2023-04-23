@@ -18,21 +18,25 @@ int main(int argc, char *argv[]) {
     int input_dim = 512;   // Dimension of input representation
     int hidden_dim = 2048; // Dimension of hidden representation
     int batch_size = 32;  // Number of input samples in the batch
+    int seq_length = 100;
     int num_heads = 8;    // Number of heads in the multi-head attention sublayer
     assert (hidden_dim % nproc == 0);
     assert (nproc > num_heads || num_heads % nproc == 0);
     std::cout << "==================Transformer Encoder Layer==================" << std::endl;
     // Instantiate FeedForwardLayer with specified input, hidden, and output dimensions
     TransformerEncoderLayerTMP transformer(input_dim, hidden_dim, num_heads, pid, nproc);
-    std::cout << "Transformer Encoder Layer initialized" << std::endl;
 
     // Input matrix (batch size = batch_size, input dimension = input_dim)
     Matrix input(batch_size, input_dim);
-    std::cout << "Input shape: (" << input.rows << ", " << input.cols << ")" << std::endl;
+#ifdef DEBUG
+    printf("TransformerEncoderLayer input size: (batch_size=%d, d_model=%d)\n", input.rows, input.cols);
+#endif
 
     // Forward pass
     Matrix output = transformer.forward(input);
-    std::cout << "Output shape: (" << output.rows << ", " << output.cols << ")" << std::endl;
+#ifdef DEBUG
+    printf("TransformerEncoderLayer Output size: (batch_size=%d, d_model=%d)\n", output.rows, output.cols);
+#endif
 
     // random labels :)
     std::vector<int> labels(batch_size);

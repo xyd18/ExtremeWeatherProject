@@ -25,16 +25,18 @@ int main(int argc, char *argv[]) {
     std::cout << "==================Transformer Encoder Layer==================" << std::endl;
     // Instantiate FeedForwardLayer with specified input, hidden, and output dimensions
     TransformerEncoderLayerTMP_CUBE transformer(input_dim, hidden_dim, num_heads, pid, nproc);
-    std::cout << "Transformer Encoder Layer initialized" << std::endl;
 
     // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
     Cube input(batch_size, seq_length, input_dim);
-    std::cout << "Input shape: (" << input.batch_size << ", " << input.rows << ", " << input.cols << ")" << std::endl;
+#ifdef DEBUG
+    printf("TransformerEncoderLayer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
+#endif
 
     // Forward pass
     Cube output = transformer.forward(input);
-    std::cout << "Output shape: (" << output.batch_size << ", " << output.rows << ", " << output.cols << ")" << std::endl;
-
+#ifdef DEBUG
+    printf("TransformerEncoderLayer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
+#endif
     // random labels :)
     // std::vector<int> labels(batch_size);
     // std::default_random_engine generator;

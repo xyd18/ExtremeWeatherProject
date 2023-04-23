@@ -18,13 +18,9 @@ private:
 public:
     FeedForwardLayer(int input_size, int hidden_size)
         : input_size(input_size), hidden_size(hidden_size),
-        linear1(input_size, hidden_size), linear2(hidden_size, input_size)
-    {
-
+        linear1(input_size, hidden_size), linear2(hidden_size, input_size) {
         linear1.reset();
         linear2.reset();
-
-        std::cout << "FeedForwardLayer::FeedForwardLayer()" << std::endl;
     }
 
     ~FeedForwardLayer() {}
@@ -32,10 +28,16 @@ public:
     // Forward pass through the feed-forward layer
     Matrix forward(const Matrix& input)
     {
+        #ifdef DEBUG
+        printf("FeedForwardLayer input size: (batch_size=%d, d_model=%d)\n", input.rows, input.cols);
+        #endif
+
         // Pass input through the first linear layer
-        std::cout << "linear input: " << input.rows << " " << input.cols << std::endl;
         hidden = linear1.forward(input);
-        std::cout << "linear hidden: " << hidden.rows << " " << hidden.cols << std::endl;
+
+        #ifdef DEBUG
+        printf("FeedForwardLayer hidden size: (batch_size=%d, hidden_size=%d)\n", hidden.rows, hidden.cols);
+        #endif
 
         // Apply activation function (e.g., ReLU) to the output of the first linear layer
         common::relu(hidden);

@@ -27,8 +27,9 @@ public:
             gamma[i] = 1.0;
             beta[i] = 0.0;
         }
-
-        std::cout << "LayerNorm::LayerNorm() " << hidden_size << std::endl;
+#ifdef DEBUG
+        printf("LayerNorm::LayerNorm(hidden_size=%d)\n", hidden_size);
+#endif    
     }
 
     ~LayerNorm() {

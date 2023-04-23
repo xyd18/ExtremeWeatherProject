@@ -46,9 +46,13 @@ public:
             V_cache.reserve(heads_per_p);
             QK_softmax_cache.reserve(heads_per_p);
             reset();
+#ifdef DEBUG
             std::cout << "[MultiHeadAttention constructor] Worker " << pid << ", heads: " << heads_per_p << std::endl;
+#endif
         }else{
+#ifdef DEBUG
             std::cout << "[MultiHeadAttention constructor] Worker " << pid << " does not have work in MHAL" << std::endl;
+#endif
         }
     }
 

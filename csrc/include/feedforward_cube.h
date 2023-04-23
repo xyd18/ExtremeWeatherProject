@@ -23,7 +23,6 @@ public:
         linear1.reset();
         linear2.reset();
 
-        std::cout << "FeedForwardLayer::FeedForwardLayer()" << std::endl;
     }
 
     ~FeedForwardLayer_Cube(){
@@ -32,18 +31,27 @@ public:
     // Forward pass through the feed-forward layer
     // The input matrix is now of shape [batch_size, seq_length, input_size]
     Cube forward(const Cube& input) {
+
+        #ifdef DEBUG
+        printf("FeedForwardLayer input size: (batch_size=%d, seq_length=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
+        #endif
+
         // Pass input through the first linear layer
-        std::cout << "batch_size: " << input.batch_size << std::endl;
-        std::cout << "linear input: " << input.rows << " " << input.cols << std::endl;
         hidden = linear1.forward(input);
-        std::cout << "linear hidden: " << hidden.rows << " " << hidden.cols << std::endl;
+
+        #ifdef DEBUG
+        printf("FeedForwardLayer hidden size: (batch_size=%d, seq_length=%d, hidden_size=%d)\n", hidden.batch_size, hidden.rows, hidden.cols);
+        #endif
 
         // Apply activation function (e.g., ReLU) to the output of the first linear layer
         common::relu_cube(hidden);
 
         // Pass the result through the second linear layer
         Cube output = linear2.forward(hidden);
-        std::cout << "linear output: " << output.rows << " " << output.cols << std::endl;
+
+        #ifdef DEBUG
+        printf("FeedForwardLayer output size: (batch_size=%d, seq_length=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
+        #endif
 
         return output;
     }
