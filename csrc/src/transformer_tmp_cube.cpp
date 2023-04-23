@@ -27,26 +27,26 @@ int main(int argc, char *argv[]) {
     TransformerEncoderLayerTMP_CUBE transformer(input_dim, hidden_dim, num_heads, pid, nproc);
     std::cout << "Transformer Encoder Layer initialized" << std::endl;
 
-    // Input matrix (batch size = batch_size, input dimension = input_dim)
-    Matrix input(batch_size, input_dim);
+    // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
+    Cube input(batch_size, seq_length, input_dim);
     std::cout << "Input shape: (" << input.rows << ", " << input.cols << ")" << std::endl;
 
     // Forward pass
-    Matrix output = transformer.forward(input);
-    std::cout << "Output shape: (" << output.rows << ", " << output.cols << ")" << std::endl;
+    Cube output = transformer.forward(input);
+    std::cout << "Output shape: (" << output.batch_size << ", " << output.rows << ", " << output.cols << ")" << std::endl;
 
     // random labels :)
-    std::vector<int> labels(batch_size);
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
-    for(int i = 0; i < batch_size; i++) {
-        labels[i] = distribution(generator);
-    }
-    Matrix dO = common::softMaxCrossEntropyBackward(output, labels);
+    // std::vector<int> labels(batch_size);
+    // std::default_random_engine generator;
+    // std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
+    // for(int i = 0; i < batch_size; i++) {
+    //     labels[i] = distribution(generator);
+    // }
+    // Matrix dO = common::softMaxCrossEntropyBackward(output, labels);
 
-    // Backward pass
-    Matrix dI = transformer.backward(dO);
-    std::cout << "dI shape: (" << dI.rows << ", " << dI.cols << ")" << std::endl;
+    // // Backward pass
+    // Matrix dI = transformer.backward(dO);
+    // std::cout << "dI shape: (" << dI.rows << ", " << dI.cols << ")" << std::endl;
     // Finalize MPI
     MPI_Finalize();
 }

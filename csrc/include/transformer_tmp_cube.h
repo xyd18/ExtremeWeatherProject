@@ -33,7 +33,7 @@ public:
         // Pass input through the multi-head attention sublayer
         Cube attention_output = multi_head_attention.forward(input);
         std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
-        Cube attention_output_global = Cube(attention_output.rows, attention_output.cols);
+        Cube attention_output_global = Cube(attention_output.batch_size, attention_output.rows, attention_output.cols);
         MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         auto mhaEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
@@ -75,15 +75,15 @@ public:
 
     // Backward pass of the transformer encoder layer
     Matrix backward(const Matrix& dO) {
-        Matrix dFeedforward = feedforward_norm.backward(dO);
+        // Matrix dFeedforward = feedforward_norm.backward(dO);
 
-        Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
+        // Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
 
-        Matrix dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
+        // Matrix dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
         
-        Matrix dAttention = multi_head_attention.backward(dAttentionAddNorm);
+        // Matrix dAttention = multi_head_attention.backward(dAttentionAddNorm);
 
-        return dAttention;
+        // return dAttention;
     }
 };
 
