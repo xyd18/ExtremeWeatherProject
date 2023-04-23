@@ -24,8 +24,14 @@ public:
 
     // Forward pass of the transformer encoder layer
     Cube forward(const Cube& input) {
+        auto mhaStart = std::chrono::system_clock::now();
+
         // Pass input through the multi-head attention sublayer
         Cube attention_output = multi_head_attention.forward(input);
+        auto mhaEnd = std::chrono::system_clock::now();
+        std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
+        printf("multihead attention forward cost: %.6fs\n", mha_forward_seconds.count());
+
         std::cout << "attention_output shape: " << attention_output.rows << " " << attention_output.cols << std::endl;
 
         // Add and normalize (residual connection + layer normalization)
@@ -40,6 +46,10 @@ public:
 
         // Add and normalize (residual connection + layer normalization)
         Cube output = feedforward_norm.forward(attention_add_norm + feedforward_output);
+
+        auto ffnEnd = std::chrono::system_clock::now();
+        std::chrono::duration<float> total_seconds = ffnEnd - mhaStart;
+        printf("total cost: %.6fs\n", total_seconds.count());
 
         return output;
     }
