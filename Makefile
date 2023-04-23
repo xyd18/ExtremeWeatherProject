@@ -13,9 +13,7 @@ else
 CFLAGS += -O2
 endif
 
-COMMON_SOURCES := csrc/src/dropout.cpp \
-	csrc/src/layernorm.cpp \
-	csrc/src/feedforward.cpp
+COMMON_SOURCES :=
 HEADERS := csrc/include/*.h
 
 TARGETBIN := transformer-$(CONFIGURATION)-seq transformer-$(CONFIGURATION)-tmp transformer-$(CONFIGURATION)-cube
