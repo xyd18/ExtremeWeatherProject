@@ -33,7 +33,7 @@ transformer-$(CONFIGURATION)-cube: $(HEADERS) $(COMMON_SOURCES) csrc/src/transfo
 	$(CXX) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_cube.cpp
 
 transformer-$(CONFIGURATION)-tmp-cube: $(HEADERS) $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
-	$(CXX) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
+	mpic++ -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/transformer_tmp_cube.cpp
 
 format:
 	clang-format -i csrc/src/*.cpp csrc/include/*.h
