@@ -45,8 +45,8 @@ format:
 clean:
 	rm -rf $(OUTPUTDIR)
 
-check:	default
-	./checker.py
+check:	release
+	./checker.py tmp -psc
 
 FILES = csrc/src/*.cpp \
 		csrc/include/*.h
