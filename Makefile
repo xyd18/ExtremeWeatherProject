@@ -7,7 +7,7 @@ CXX_MPI := mpic++
 
 HEADERS := csrc/include/*.h
 COMMON_SOURCES :=
-TARGETS := transformer-seq transformer-cube transformer-tmp transformer_tmp-cube
+TARGETS := transformer-seq transformer-cube transformer-tmp transformer-tmp-cube
 # TARGETS := transformer-seq transformer-cube
 
 # Default build target
