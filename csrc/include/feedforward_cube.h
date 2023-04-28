@@ -25,6 +25,11 @@ public:
 
     }
 
+    // Copy constructor
+    FeedForwardLayer_Cube(const FeedForwardLayer_Cube& other)
+        : input_size(other.input_size), hidden_size(other.hidden_size),
+        linear1(other.linear1), linear2(other.linear2), hidden(other.hidden) {}
+
     ~FeedForwardLayer_Cube(){
     }
 

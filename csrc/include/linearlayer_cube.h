@@ -19,6 +19,18 @@ public:
         }
     }
 
+    LinearLayer_cube(const LinearLayer_cube& other) :
+        weight(other.weight.rows, other.weight.cols),
+        inputCopy(other.inputCopy),
+        bias(new float[other.weight.cols]),
+        learning_rate(other.learning_rate)
+    {
+        // Copy bias vector
+        for (int i = 0; i < weight.cols; ++i) {
+            bias[i] = other.bias[i];
+        }
+    }
+
     ~LinearLayer_cube() {
         delete[] bias;
     }

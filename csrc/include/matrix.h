@@ -23,6 +23,17 @@ public:
         }
     }
 
+    Matrix(const Matrix& other) {
+        rows = other.rows;
+        cols = other.cols;
+        data = new float[rows * cols];
+
+        // Copy the data from the input object
+        for (int i = 0; i < rows * cols; ++i) {
+            data[i] = other.data[i];
+        }
+    }
+
     ~Matrix() {
         // delete[] data; // FIXME: this line will cause double free, comment it out for now
     }

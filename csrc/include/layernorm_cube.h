@@ -21,9 +21,18 @@ public:
             gamma[i] = 1.0;
             beta[i] = 0.0;
         }
-#ifdef DEBUG
-        printf("LayerNorm_cube::LayerNorm_cube(hidden_size=%d)\n", hidden_size);
-#endif
+    }
+
+    // Copy constructor
+    LayerNorm_cube(const LayerNorm_cube& other) :
+    hidden_size(other.hidden_size), epsilon(other.epsilon) {
+        gamma = new float[hidden_size];
+        beta = new float[hidden_size];
+        // Copy the data from the other object
+        for (int i = 0; i < hidden_size; i++) {
+            gamma[i] = other.gamma[i];
+            beta[i] = other.beta[i];
+        }
     }
 
     ~LayerNorm_cube() {
@@ -32,33 +41,35 @@ public:
     }
 
     Cube forward(Cube input) {
-    Cube output(input.batch_size, input.rows, input.cols);
-    // compute mean and variance of input for each sample in the batch
-    for (int b = 0; b < output.batch_size; b++) {
-        for (int i = 0; i < output.rows; i++) {
-            float mean = 0.0;
-            float variance = 0.0;
-            for (int j = 0; j < output.cols; j++) {
-                mean += input(b,i,j);
-                variance += input(b,i,j) * input(b,i,j);
-            }
-            mean /= output.cols;
-            variance = variance / output.cols - mean * mean;
+        if (input.cols != hidden_size)
+             throw std::runtime_error("LayerNorm_cube::forward(): input.cols != hidden_size");
+        Cube output(input.batch_size, input.rows, input.cols);
+        // compute mean and variance of input for each sample in the batch
+        for (int b = 0; b < output.batch_size; b++) {
+            for (int i = 0; i < output.rows; i++) {
+                float mean = 0.0;
+                float variance = 0.0;
+                for (int j = 0; j < output.cols; j++) {
+                    mean += input(b,i,j);
+                    variance += input(b,i,j) * input(b,i,j);
+                }
+                mean /= output.cols;
+                variance = variance / output.cols - mean * mean;
 
-            // normalize input using mean and variance
-            for (int j = 0; j < output.cols; j++) {
-                output(b,i,j) = (input(b,i,j) - mean) / sqrt(variance + epsilon);
-            }
+                // normalize input using mean and variance
+                for (int j = 0; j < output.cols; j++) {
+                    output(b,i,j) = (input(b,i,j) - mean) / sqrt(variance + epsilon);
+                }
 
-            // apply scaling and shifting using gamma and beta
-            for (int j = 0; j < output.cols; j++) {
-                output(b,i,j) = gamma[j] * input(b,i,j) + beta[j];
+                // apply scaling and shifting using gamma and beta
+                for (int j = 0; j < output.cols; j++) {
+                    output(b,i,j) = gamma[j] * input(b,i,j) + beta[j];
+                }
             }
         }
-    }
 
-    return output;
-}
+        return output;
+    }
 
     Matrix backward(Matrix grad) {
 

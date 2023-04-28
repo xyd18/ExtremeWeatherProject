@@ -20,7 +20,28 @@ public:
         : multi_head_attention(input_dim, input_dim / num_heads, num_heads, 1, 0),
           feedforward_layer(input_dim, hidden_dim),
           feedforward_norm(hidden_dim, 1e-6f),
-          attention_norm(hidden_dim, 1e-6f) {}
+          attention_norm(hidden_dim, 1e-6f) {
+#ifdef DEBUG
+        std::cout << "[TransformerEncoderLayer_cube constructor] " << this << std::endl;
+#endif
+          }
+
+    TransformerEncoderLayer_cube(const TransformerEncoderLayer_cube& other)
+        : multi_head_attention(other.multi_head_attention),
+          feedforward_layer(other.feedforward_layer),
+          feedforward_norm(other.feedforward_norm),
+          attention_norm(other.attention_norm)
+    {
+#ifdef DEBUG
+        std::cout << "[TransformerEncoderLayer_cube copy constructor] " << this << std::endl;
+#endif
+    }
+
+    ~TransformerEncoderLayer_cube() {
+#ifdef DEBUG
+        std::cout << "[TransformerEncoderLayer_cube destructor] " << this <<std::endl;
+#endif
+    }
 
     // Forward pass of the transformer encoder layer
     Cube forward(const Cube& input) {

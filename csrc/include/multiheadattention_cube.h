@@ -44,7 +44,16 @@ public:
         }
     }
 
-    ~MultiHeadAttention_cube() {}
+    MultiHeadAttention_cube(const MultiHeadAttention_cube& other)
+    : num_heads(other.num_heads), d_k(other.d_k), d_model(other.d_model), pid(other.pid), nproc(other.nproc),
+      heads_per_p(other.heads_per_p), hasWork(other.hasWork), W_q(other.W_q), W_k(other.W_k), W_v(other.W_v), W_o(other.W_o) {}
+
+
+    ~MultiHeadAttention_cube() {
+#ifdef DEBUG
+            std::cout << "[MultiHeadAttention destructor]" << std::endl;
+#endif
+    }
 
     void reset() {
         if(!hasWork) return;
