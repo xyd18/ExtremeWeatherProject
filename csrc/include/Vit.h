@@ -128,37 +128,80 @@ public:
                 int total_time_slices = num_stages + num_micro - 1;
                 Cube my_input(input.batch_size / num_micro, input.rows, input.cols);
                 MPI_Barrier(MPI_COMM_WORLD);
+#ifdef DEBUG
+                if (pid == 0){
+                    printf("[MASTER] VisionTransformer() total_time_slices=%d\n", total_time_slices);
+                    fflush(stdout);
+                }
+#endif
                 for (int t = 0; t < total_time_slices; t++)
                 { // all worker work total_time_slices time slices
+#ifdef DEBUG
+                    if (pid == 0){
+                        printf("[MASTER] VisionTransformer() start pipeline on %d time slice\n", t);
+                        fflush(stdout);
+                    }
+                    MPI_Barrier(MPI_COMM_WORLD);
+#endif
                     if (pid <= t && t < pid + num_micro)
                     { // each worker works num_micro time slices
+#ifdef DEBUG
+                        printf("[Worker %d] VisionTransformer() start to work\n", pid);
+                        fflush(stdout);
+#endif
                         // Step 1: get my input data
                         if (first_stage)
                         {
                             // get micro batch from input batch
-                            int micro_batch_low = (t - pid) * num_micro;
-                            int micro_batch_high = (t - pid + 1) * num_micro;
-                            std::copy(input.data+micro_batch_low * input.rows * input.cols, input.data+micro_batch_high * input.rows * input.cols, my_input.data);
+                            int micro_batch_low = (t - pid) * my_input.batch_size;
+                            int micro_batch_high = (t - pid + 1) * my_input.batch_size;
+                            std::copy(
+                                input.data+micro_batch_low * input.rows * input.cols,
+                                input.data+micro_batch_high * input.rows * input.cols,
+                                my_input.data);
+#ifdef DEBUG
+                        printf("[Worker %d] VisionTransformer() finish getting input data from input\n", pid);
+                        fflush(stdout);
+#endif
                         }
                         else
                         {
                             // get micro batch from prev worker
                             MPI_Recv(my_input.data, my_input.batch_size * my_input.rows * my_input.cols, MPI_FLOAT, pid - 1, 0, MPI_COMM_WORLD, nullptr);
+#ifdef DEBUG
+                        printf("[Worker %d] VisionTransformer() finish getting input data from %d\n", pid, pid - 1);
+                        fflush(stdout);
+#endif
                         }
                         // Step 2: forward my input data
                         Cube my_output = my_stage.forward(my_input);
+#ifdef DEBUG
+                        printf("[Worker %d] VisionTransformer() finish forwarding\n", pid);
+                        fflush(stdout);
+#endif
                         // Step 3: send output
                         if (last_stage)
                         {
                             // generate output
-                            int micro_batch_low = (t - pid) * num_micro;
-                            std::copy(my_output.data, my_output.data +my_output.batch_size * my_output.rows * my_output.cols, output.data + micro_batch_low * output.rows * output.cols);
+                            int micro_batch_low = (t - pid) * my_output.batch_size;
+                            std::copy(
+                                my_output.data,
+                                my_output.data +my_output.batch_size * my_output.rows * my_output.cols,
+                                output.data + micro_batch_low * output.rows * output.cols);
+#ifdef DEBUG
+                        printf("[Worker %d] VisionTransformer() finish generating output data\n", pid);
+                        fflush(stdout);
+#endif
                         }
                         else
                         {
                             // send micro batch to next worker
                             MPI_Request request;
                             MPI_Isend(my_output.data, my_output.batch_size * my_output.rows * my_output.cols, MPI_FLOAT, pid + 1, 0, MPI_COMM_WORLD, &request);
+#ifdef DEBUG
+                        printf("[Worker %d] VisionTransformer() finish sending output data to %d\n", pid, pid+1);
+                        fflush(stdout);
+#endif
                         }
                     }
                     MPI_Barrier(MPI_COMM_WORLD);
@@ -179,7 +222,7 @@ public:
             }
             else
             {
-                // TODO: only using tensor
+                // only using tensor
                 output = my_stage.forward(input);
             }
         }
