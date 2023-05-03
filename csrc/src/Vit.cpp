@@ -6,6 +6,8 @@
 
 int main(int argc, char** argv) {
     StartupOptions options = parseOptions(argc, argv);
+    printf("Using TPM=%s PIP=%s\n", options.usingTMP ? "true" : "false", options.usingPip ? "true" : "false");
+    printf("numMicroBatch=%d numBatchSize=%d\n", options.numMicroBatch, options.numBatchSize);
 
     if (options.usingTMP || options.usingPip) {
         // Initialize MPI
@@ -34,13 +36,17 @@ int main(int argc, char** argv) {
 
 #ifdef DEBUG
     printf("VisionTransformer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
+    fflush(stdout);;
 #endif
-
+    auto forward_start = std::chrono::system_clock::now();
     Cube output = vit.forward(input);
+    auto forward_end = std::chrono::system_clock::now();
+    printf("VIT forward cost:\t%.6fs\n", std::chrono::duration<float>(forward_end - forward_start).count());
     output.save(options.outputFile);
 
 #ifdef DEBUG
     printf("VisionTransformer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
+    fflush(stdout);;
 #endif
 
     if (options.usingTMP || options.usingPip) {
