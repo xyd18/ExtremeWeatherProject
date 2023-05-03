@@ -5,7 +5,7 @@
 #include "linearlayer_cube.h"
 #include "cube.h"
 #include "common.h"
-/* FIXME: 实际上写着写着发现这个class和feedforward_cube完全相同 如果没有更多的变化 可以删除 */
+
 class FeedForwardLayerTMP_cube {
     private:
         int input_size; // default for 512

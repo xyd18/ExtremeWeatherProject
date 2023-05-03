@@ -44,25 +44,16 @@ public:
         // Add and normalize (residual connection + layer normalization)
         // DESIGN: accroding megatron LM, LN, Residuals computation are duplicated and optimzied inidividually in each process, instead of one process + broadcast
         Cube ff_input = attention_norm.forward(input + attention_output_global);
-        // int ff_input_size[2] = { ff_input.rows, ff_input.cols };
         
         auto ffStart = std::chrono::system_clock::now(); // get the current time
-
-        // broadcast input to all processes
-        // MPI_Bcast(&ff_input_size[0], 2, MPI_INT, 0, MPI_COMM_WORLD);
-        // if(pid != 0) ff_input = Matrix(ff_input_size[0], ff_input_size[1]);
-        // MPI_Bcast(ff_input.data, ff_input_size[0] * ff_input_size[1], MPI_FLOAT, 0, MPI_COMM_WORLD);
-
         // Pass the result through the feedforward sublayer
         Cube ff_output = feedforward_layer.forward(ff_input);
         // gather output from all processes
         Cube ff_output_reduce(ff_output.batch_size, ff_output.rows, ff_output.cols);
         MPI_Allreduce(ff_output.data, ff_output_reduce.data, ff_output.batch_size * ff_output.rows * ff_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-        
         auto ffEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = ffEnd - ffStart;
         printf("[Worker %d] ff cost: %.6fs\n", pid, elapsed_seconds.count());
-        // std::cout << "[Worker " << pid << "] ff cost: " << elapsed_seconds.count << std::endl;
 
         // Add and normalize (residual connection + layer normalization)
         Cube output = feedforward_norm.forward(ff_input + ff_output_reduce);
@@ -70,7 +61,7 @@ public:
         auto ffnEnd = std::chrono::system_clock::now();
 
         std::chrono::duration<float> total_seconds = ffnEnd - mhaStart;
-        printf("[Worker %d] total cost: %.6fs\n", pid, total_seconds.count());
+        printf("[Worker %d] total forward cost: %.6fs\n", pid, total_seconds.count());
 
         return output;
     }
@@ -78,15 +69,30 @@ public:
     // Backward pass of the transformer encoder layer
     Cube backward(const Cube& dO) {
         // FIXME: parallel, boy
-        Cube dFeedforward = feedforward_norm.backward(dO);
-
-        Cube dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
-
-        Cube dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
+        auto ff_start = std::chrono::system_clock::now();
+        Cube d_ffn = feedforward_norm.backward(dO);
         
-        Cube dAttention = multi_head_attention.backward(dAttentionAddNorm);
+        Cube d_ff = feedforward_layer.backward(d_ffn);
+        Cube d_ff_global(d_ff.batch_size, d_ff.rows, d_ff.cols);
+        MPI_Allreduce(d_ff.data, d_ff_global.data, d_ff.batch_size * d_ff.rows * d_ff.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto ff_end = std::chrono::system_clock::now();
+        std::chrono::duration<float> ff_backward_cost = ff_end - ff_start;
+        printf("[Worker %d] FF backward cost: %.6fs\n", pid, ff_backward_cost.count());
 
-        return dAttention;
+        Cube d_mha_n = attention_norm.backward(d_ff_global);
+        
+        auto mhab_start = std::chrono::system_clock::now();
+        Cube d_mha = multi_head_attention.backward(d_mha_n);
+        Cube d_mha_global(d_mha.batch_size, d_mha.rows, d_mha.cols);
+        MPI_Allreduce(d_mha.data, d_mha_global.data, d_mha.batch_size * d_mha.rows * d_mha.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto mhab_end = std::chrono::system_clock::now();
+        std::chrono::duration<float> mha_backward_cost = mhab_end - mhab_start;
+        printf("[Worker %d] MHAL backward cost: %.6fs\n", pid, mha_backward_cost.count());
+
+        std::chrono::duration<float> b_total_cost = mhab_end - ff_start;
+        printf("[Worker %d] Total backward cost: %.6fs\n", pid, b_total_cost.count());
+
+        return d_mha_global;
     }
 };
 

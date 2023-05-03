@@ -21,7 +21,11 @@ if not valid:
     print(usage_guild)
     exit(-1)
 
-prog_name = 'release-transformer-' + version
+prog_name = ''
+if(version == 'seq'):
+    prog_name = 'release-transformer-' + version
+else:
+    prog_name = 'debug-transformer-' + version + '-cube'
 
 prog = os.path.join(bin_dir, prog_name)
 
