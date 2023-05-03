@@ -24,8 +24,8 @@ public:
         : multi_head_attention(input_dim, input_dim / num_heads, num_heads, nproc, pid),
           pid(pid), nproc(nproc),
           feedforward_layer(input_dim, hidden_dim, pid, nproc),
-          feedforward_norm(hidden_dim, 1e-6f),
-          attention_norm(hidden_dim, 1e-6f) {}
+          feedforward_norm(input_dim, 1e-6f),
+          attention_norm(input_dim, 1e-6f) {}
 
     // Forward pass of the transformer encoder layer
     Cube forward(const Cube& input) {
@@ -76,16 +76,17 @@ public:
     }
 
     // Backward pass of the transformer encoder layer
-    Matrix backward(const Matrix& dO) {
-        // Matrix dFeedforward = feedforward_norm.backward(dO);
+    Cube backward(const Cube& dO) {
+        // FIXME: parallel, boy
+        Cube dFeedforward = feedforward_norm.backward(dO);
 
-        // Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
+        Cube dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
 
-        // Matrix dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
+        Cube dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
         
-        // Matrix dAttention = multi_head_attention.backward(dAttentionAddNorm);
+        Cube dAttention = multi_head_attention.backward(dAttentionAddNorm);
 
-        // return dAttention;
+        return dAttention;
     }
 };
 

@@ -167,7 +167,7 @@ public:
      * dL/db = dL/dY * dY/db = dL/dY * 1 (vector of batch size of 1)
     */
     Matrix backward(const Matrix& grad) {
-        // Compute gradient w.r.t. weight
+        // Compute gradient w.r.t. weight, dL/dW = X^T * dL/dY
         std::cout << "Linear Backward" << std::endl;
         std::cout << "Input cache: " << inputCopy.rows << "x" << inputCopy.cols << std::endl;
         std::cout << "input Grad: " << grad.rows << "x" << grad.cols << std::endl;

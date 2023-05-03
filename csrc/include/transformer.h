@@ -20,8 +20,8 @@ public:
     TransformerEncoderLayer(int input_dim, int hidden_dim, int num_heads)
         : multi_head_attention(input_dim, input_dim / num_heads, num_heads, 1, 0),
           feedforward_layer(input_dim, hidden_dim),
-          feedforward_norm(hidden_dim, 1e-6f),
-          attention_norm(hidden_dim, 1e-6f) {}
+          feedforward_norm(input_dim, 1e-6f),
+          attention_norm(input_dim, 1e-6f) {}
 
     // Forward pass of the transformer encoder layer
     Matrix forward(const Matrix& input) {

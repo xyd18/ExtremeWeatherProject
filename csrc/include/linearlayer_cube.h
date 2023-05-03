@@ -9,7 +9,7 @@ public:
     Matrix weight;  // Weight matrix
     Cube inputCopy;  // Copy of input matrix for backward pass
     float* bias;    // Bias vector
-    float learning_rate = 0.01f;
+    float learning_rate = 0.00001f;
 
     // Constructor with specified input dimension and output dimension
     LinearLayer_cube(int input_dim, int output_dim) : weight(input_dim, output_dim) {
@@ -80,37 +80,44 @@ public:
      * dL/dW = dL/dY * dY/dW = dL/dY * X = X^T * dL/dY
      * dL/db = dL/dY * dY/db = dL/dY * 1 (vector of batch size of 1)
     */
-    Matrix backward(const Matrix& grad) {
-        // // Compute gradient w.r.t. weight
-        // std::cout << "Linear Backward" << std::endl;
-        // std::cout << "Input: " << inputCopy.rows << "x" << inputCopy.cols << std::endl;
-        // std::cout << "Grad: " << grad.rows << "x" << grad.cols << std::endl;
-        // Matrix grad_weight = inputCopy.transponse() * grad;
+    Cube backward(const Cube& grad) {
+        // Compute gradient w.r.t. weight
+        std::cout << "===================Linear Backward===================" << std::endl;
+        printf("Input Copy(%d, %d, %d)\n", inputCopy.batch_size, inputCopy.rows, inputCopy.cols);
+        Cube grad_weight = inputCopy.transpose() * grad;
+        printf("grad_weight(%d, %d, %d)\n", grad_weight.batch_size, grad_weight.rows, grad_weight.cols);
 
-        // // Compute gradient w.r.t. bias
-        // std::vector<float> grad_bias(grad.cols, 0.f);
-        // for (int i = 0; i < grad.rows; ++i) {
-        //     float sum = 0.0f;
-        //     for (int j = 0; j < grad.cols; ++j) {
-        //         sum += grad(i, j);
-        //     }
-        //     grad_bias[i] = sum;
-        // }
+        // Compute gradient w.r.t. bias
+        std::vector<std::vector<float>> grad_bias(grad.batch_size, std::vector<float>(grad.rows, 0.f));
+        for(int b = 0;b < grad.batch_size;b++) {
+            for(int i = 0;i < grad.rows;i++) {
+                float sum = 0.0f;
+                for(int j = 0;j < grad.cols;j++) {
+                    sum += grad(b, i, j);
+                }
+                grad_bias[b][i] = sum;
+            }
+        }
 
-        // // Compute gradient w.r.t. input
-        // Matrix grad_x = grad * weight.transponse();
+        // Compute gradient w.r.t. input
+        Cube grad_x = grad * weight.transpose();
+        printf("grad_x(%d, %d, %d)\n", grad_x.batch_size, grad_x.rows, grad_x.cols);
 
-        // // Update weights and biases
-        // for(int i = 0;i < weight.rows; i++) {
-        //     for(int j = 0;j < weight.cols;j++) {
-        //         weight(i, j) -= learning_rate * grad_weight(i, j);
-        //     }
-        // }
-        // for (int i = 0; i < grad.cols; ++i) {
-        //     bias[i] += grad_bias[i]; // FIXME: += ?
-        // }
+        // Update weights and biases
+        for(int i = 0;i < weight.rows; i++) {
+            for(int j = 0;j < weight.cols;j++) {
+                for(int b = 0;b < grad.batch_size;b++) {
+                    weight(i, j) -= learning_rate * grad_weight(b, i, j);
+                }
+            }
+        }
+        for (int i = 0; i < grad.cols; ++i) {
+            for(int b = 0;b < grad.batch_size;b++) {
+                bias[i] += grad_bias[b][i];
+            }
+        }
 
-        // return grad_x;
+        return grad_x;
     }
 };
 

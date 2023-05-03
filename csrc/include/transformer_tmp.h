@@ -24,8 +24,8 @@ public:
         : multi_head_attention(input_dim, input_dim / num_heads, num_heads, nproc, pid),
           pid(pid), nproc(nproc),
           feedforward_layer(input_dim, hidden_dim, pid, nproc),
-          feedforward_norm(hidden_dim, 1e-6f),
-          attention_norm(hidden_dim, 1e-6f) {}
+          feedforward_norm(input_dim, 1e-6f),
+          attention_norm(input_dim, 1e-6f) {}
 
     // Forward pass of the transformer encoder layer
     Matrix forward(const Matrix& input) {

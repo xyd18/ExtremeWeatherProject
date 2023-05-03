@@ -137,63 +137,6 @@ public:
         }
 
         return d_xmu2;
-
-
-        // Matrix x_centered = x_cache - mean_cache;
-        // Matrix x_centered_sum(x_centered.rows, x_centered.cols);
-        // Matrix x_centered_pow = Matrix(x_centered.rows, x_centered.cols);
-        // Matrix var_cache_pow = Matrix(var_cache.rows, var_cache.cols);
-        // Matrix var_cache_sqrt_negative = Matrix(var_cache.rows, var_cache.cols);
-        // Matrix var_cache_sqrt_positive = Matrix(var_cache.rows, var_cache.cols);
-        // for(int i = 0; i < x_centered_sum.rows; i++) {
-        //     float sum1 = 0.f;
-        //     float sum2 = 0.f;
-        //     for(int j = 0; j < x_centered_sum.cols; j++) {
-        //         sum1 += x_centered(i,j);
-        //         sum2 += x_centered(i,j) * x_centered(i,j) * (-0.5);
-        //         var_cache_pow(i,j) = pow(var_cache(i,j) + epsilon, -1.5);
-        //         var_cache_sqrt_negative(i,j) = -1.0 / sqrt(var_cache(i,j) + epsilon);
-        //         var_cache_sqrt_positive(i,j) = 1.0 / sqrt(var_cache(i,j) + epsilon);
-        //     }
-        //     for(int j = 0; j < x_centered_sum.cols; j++) {
-        //         x_centered_sum(i,j) = sum1;
-        //         x_centered_pow(i,j) = sum2;
-        //     }
-        // }
-
-        // Matrix grad_var = grad * x_centered_pow * var_cache_pow;
-        // std::cout << "grad_var shape: " << grad_var.rows << " " << grad_var.cols << std::endl;
-        // Matrix grad_var_shift_positive(grad_var.rows, grad_var.cols);
-        // Matrix grad_var_shift_negative(grad_var.rows, grad_var.cols);
-        // float seq_length = x_cache.rows;
-        // for(int i = 0; i < grad_var_shift_positive.rows; i++) {
-        //     for(int j = 0; j < grad_var_shift_positive.cols; j++) {
-        //         grad_var_shift_negative(i,j) = (-2.0 / seq_length) * grad_var(i,j);
-        //         grad_var_shift_positive(i,j) = (2.0 / seq_length) * grad_var(i,j);
-        //     }
-        // }
-        // Matrix grad_mean = grad * var_cache_sqrt_negative;
-        // for(int i = 0; i < grad_mean.rows; i++) {
-        //     float sum = 0.f;
-        //     for(int j = 0; j < grad_mean.cols; j++) {
-        //         sum += grad_mean(i,j);
-        //     }
-        //     for(int j = 0; j < grad_mean.cols; j++) {
-        //         grad_mean(i,j) = sum;
-        //     }
-        // }
-        // grad_mean = grad_mean + grad_var_shift_negative * x_centered_sum;
-
-        // // Compute the gradient w.r.t. the input
-        // Matrix gamma_broadcast(mean_cache.rows, mean_cache.cols);
-        // for(int i = 0;i < gamma_broadcast.rows; i++) {
-        //     for(int j = 0; j < gamma_broadcast.cols; j++) {
-        //         gamma_broadcast(i,j) = gamma[j];
-        //     }
-        // }
-        // Matrix dX = grad * gamma_broadcast * var_cache_sqrt_positive + grad_mean + grad_var_shift_positive * x_centered_sum;
-        // std::cout << "dX shape: " << dX.rows << " " << dX.cols << std::endl;
-        // return dX;
     }
 };
 

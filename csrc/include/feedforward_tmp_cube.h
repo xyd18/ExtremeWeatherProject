@@ -47,6 +47,15 @@ class FeedForwardLayerTMP_cube {
         }
 
         Cube backward(const Cube& grad) {
+            std::cout << "===================Feed Forward Backward===================" << std::endl;
+            printf("grad(%d, %d, %d)\n", grad.batch_size, grad.rows, grad.cols);
+            Cube grad_relu = linear2.backward(grad);
+            printf("grad_relu(%d, %d, %d)\n", grad_relu.batch_size, grad_relu.rows, grad_relu.cols);
+            printf("hidden(%d, %d, %d)\n", hidden.batch_size, hidden.rows, hidden.cols);
+            common::relu_backward_cube(grad_relu, hidden);
+            Cube output = linear1.backward(grad_relu);
+            printf("output(%d, %d, %d)\n", output.batch_size, output.rows, output.cols);
+            return output;
         }
 };
 

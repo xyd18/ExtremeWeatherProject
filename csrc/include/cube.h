@@ -49,9 +49,10 @@ public:
     }
 
     void setZero() {
-        for (int i = 0; i < batch_size * rows * cols; ++i) {
-            data[i] = 0.0f;
-        }
+        std::fill(data, data + batch_size * rows * cols, 0.0f);
+        // for (int i = 0; i < batch_size * rows * cols; ++i) {
+        //     data[i] = 0.0f;
+        // }
     }
 
     float& operator()(int batch, int row, int col) {

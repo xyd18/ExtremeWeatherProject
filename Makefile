@@ -1,5 +1,5 @@
 OUTPUTDIR := bin/
-CFLAGS := -std=c++14 -fvisibility=hidden -lpthread -Wall -Wextra
+CFLAGS := -std=c++14 -fvisibility=hidden -lpthread #-Wall -Wextra
 
 # Define different compilers for different targets
 CXX_SEQ := $(CXX)

@@ -19,8 +19,8 @@ public:
     TransformerEncoderLayer_cube(int input_dim, int hidden_dim, int num_heads)
         : multi_head_attention(input_dim, input_dim / num_heads, num_heads, 1, 0),
           feedforward_layer(input_dim, hidden_dim),
-          feedforward_norm(hidden_dim, 1e-6f),
-          attention_norm(hidden_dim, 1e-6f) {
+          feedforward_norm(input_dim, 1e-6f),
+          attention_norm(input_dim, 1e-6f) {
 #ifdef DEBUG
         std::cout << "[TransformerEncoderLayer_cube constructor] " << this << std::endl;
 #endif
@@ -71,6 +71,19 @@ public:
         printf("total cost: %.6fs\n", total_seconds.count());
 
         return output;
+    }
+
+    // Backward pass of the transformer encoder layer
+    Cube backward(const Cube& dO) {
+        // Matrix dFeedforward = feedforward_norm.backward(dO);
+
+        // Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);
+
+        // Matrix dAttentionAddNorm = attention_norm.backward(dFeedforwardAddNorm);
+        
+        // Matrix dAttention = multi_head_attention.backward(dAttentionAddNorm);
+
+        // return dAttention;
     }
 };
 

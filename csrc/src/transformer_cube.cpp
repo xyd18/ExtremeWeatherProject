@@ -11,17 +11,18 @@ int main() {
     std::cout << "==================Transformer Encoder Layer==================" << std::endl;
     TransformerEncoderLayer_cube transformer(input_dim, hidden_dim, 8);
 
-    Cube input(batch_size, seq_length, input_dim);
+    Cube input(batch_size, seq_length, input_dim); 
 
 #ifdef DEBUG
     printf("TransformerEncoderLayer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
 #endif
 
+    // forward pass
     Cube output = transformer.forward(input);
 
 #ifdef DEBUG
     printf("TransformerEncoderLayer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
 #endif
-
+    
     return 0;
 }

@@ -37,18 +37,28 @@ int main(int argc, char *argv[]) {
 #ifdef DEBUG
     printf("TransformerEncoderLayer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
 #endif
-    // random labels :)
-    // std::vector<int> labels(batch_size);
-    // std::default_random_engine generator;
-    // std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
-    // for(int i = 0; i < batch_size; i++) {
-    //     labels[i] = distribution(generator);
-    // }
-    // Matrix dO = common::softMaxCrossEntropyBackward(output, labels);
+   
+    // form random labels
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
+    Cube labels(batch_size, seq_length, input_dim);
+    for(int i = 0;i < batch_size;i++) {
+        for(int j = 0;j < seq_length;j++) {
+            int label = distribution(generator); // label for current token
+            for(int k = 0;k < input_dim;k++) {
+                labels(i, j, k) = k == label ? 1 : 0;
+            }
+        }
+    }
 
-    // // Backward pass
-    // Matrix dI = transformer.backward(dO);
-    // std::cout << "dI shape: (" << dI.rows << ", " << dI.cols << ")" << std::endl;
+    // backward pass
+    Cube dO = common::softMaxCrossEntropyBackwardCube(output, labels);
+    Cube dI = transformer.backward(dO);
+#ifdef DEBUG
+    printf("TransformerEncoderLayer dI size: (batch_size=%d, seq_len=%d, d_model=%d)\n", dI.batch_size, dI.rows, dI.cols);
+#endif
+
+    if(pid == 0) printf("Process %d finished successfully\n", pid);
     // Finalize MPI
     MPI_Finalize();
 }
