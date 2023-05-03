@@ -1,10 +1,11 @@
 #ifndef LINEAR_H_
 #define LINEAR_H_
 
+#include "model.h"
 #include "matrix.h"
 #include "cube.h"
 
-class LinearLayer_cube {
+class LinearLayer_cube : public Model {
 public:
     Matrix weight;  // Weight matrix
     Cube inputCopy;  // Copy of input matrix for backward pass
@@ -52,7 +53,7 @@ public:
      * Input shape: (batch_size, seq_length, input_size)
      * Output shape: (batch_size, seq_length, output_size)
      */
-    Cube forward(const Cube& input) {
+    Cube forward(const Cube& input) override {
         if (input.cols != weight.rows) {
             throw std::runtime_error("Cube dimensions do not match for LinearLayer weight.");
         }

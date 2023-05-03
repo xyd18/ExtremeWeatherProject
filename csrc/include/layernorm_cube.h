@@ -1,10 +1,11 @@
 #ifndef LAYERNORM_H_
 #define LAYERNORM_H_
 
+#include "model.h"
 #include "matrix.h"
 #include "cube.h"
 
-class LayerNorm_cube {
+class LayerNorm_cube : public Model {
 private:
     int hidden_size;
     float* gamma;
@@ -46,7 +47,7 @@ public:
         delete[] beta;
     }
 
-    Cube forward(Cube input) {
+    Cube forward(const Cube& input) override {
         if (input.cols != hidden_size)
              throw std::runtime_error("LayerNorm_cube::forward(): input.cols != hidden_size");
         x_cache = Cube(input); 

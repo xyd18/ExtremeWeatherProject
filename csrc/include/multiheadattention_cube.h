@@ -1,12 +1,13 @@
 #ifndef MULTIHEADATTENTION_H_
 #define MULTIHEADATTENTION_H_
 
+#include "model.h"
 #include "matrix.h"
 #include "cube.h"
 #include <vector>
 #include <iostream>
 
-class MultiHeadAttention_cube {
+class MultiHeadAttention_cube : public Model {
 public:
     int num_heads;
     int d_k;
@@ -77,7 +78,7 @@ public:
     }
 
     // Forward pass of the multi-head attention layer
-    Cube forward(const Cube& X) {
+    Cube forward(const Cube& X) override{
         if(!hasWork) {
             Cube output(X.batch_size, X.rows, d_model);
             output.setZero(); // all zero cube has no effect in Allreduce later.

@@ -1,12 +1,12 @@
 #ifndef FEEDFORWARDLAYER_TMP_H_
 #define FEEDFORWARDLAYER_TMP_H_
 
+#include "model.h"
 #include "matrix.h"
 #include "linearlayer_cube.h"
 #include "cube.h"
 #include "common.h"
-
-class FeedForwardLayerTMP_cube {
+class FeedForwardLayerTMP_cube : public Model {
     private:
         int input_size; // default for 512
         int hidden_size; // default for 1024
@@ -31,7 +31,7 @@ class FeedForwardLayerTMP_cube {
             }
         }
 
-        Cube forward(const Cube& input) {
+        Cube forward(const Cube& input) override {
             // forward pass
             // std::cout << "[FeedForwardLayerTMP, W" << pid << "] input shape: " << input.rows << " " << input.cols << std::endl;
             hidden = linear1.forward(input);

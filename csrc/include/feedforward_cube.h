@@ -1,12 +1,13 @@
 #ifndef FEEDFORWARDLAYER_H_
 #define FEEDFORWARDLAYER_H_
 
+#include "model.h"
 #include "matrix.h"
 #include "linearlayer_cube.h"
 #include "cube.h"
 #include "common.h"
 
-class FeedForwardLayer_Cube {
+class FeedForwardLayer_Cube : public Model {
 
 private:
     int input_size; // default for 512
@@ -35,7 +36,7 @@ public:
 
     // Forward pass through the feed-forward layer
     // The input matrix is now of shape [batch_size, seq_length, input_size]
-    Cube forward(const Cube& input) {
+    Cube forward(const Cube& input) override {
 
         #ifdef DEBUG
         printf("FeedForwardLayer input size: (batch_size=%d, seq_length=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);

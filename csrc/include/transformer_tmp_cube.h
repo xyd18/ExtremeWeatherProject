@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <chrono>
+#include "model.h"
 #include "mpi.h"
 #include "feedforward_tmp_cube.h"
 #include "dropout.h"
@@ -10,7 +11,7 @@
 #include "layernorm_cube.h"
 #include "multiheadattention_cube.h"
 
-class TransformerEncoderLayerTMP_CUBE {
+class TransformerEncoderLayerTMP_CUBE : public Model {
 public:
     int pid;
     int nproc;
@@ -28,7 +29,7 @@ public:
           attention_norm(input_dim, 1e-6f) {}
 
     // Forward pass of the transformer encoder layer
-    Cube forward(const Cube& input) {
+    Cube forward(const Cube& input) override {
         auto mhaStart = std::chrono::system_clock::now();
         // Pass input through the multi-head attention sublayer
         Cube attention_output = multi_head_attention.forward(input);
