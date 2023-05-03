@@ -52,7 +52,7 @@ public:
         Cube attention_output = multi_head_attention.forward(input);
         auto mhaEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
-        printf("multihead attention forward cost: %.6fs\n", mha_forward_seconds.count());
+        printf("MHAL forward cost:\t%.6fs\n", mha_forward_seconds.count());
 
         // Add and normalize (residual connection + layer normalization)
         Cube attention_add_norm = attention_norm.forward(input + attention_output);
@@ -61,15 +61,15 @@ public:
         // Pass the result through the feedforward sublayer
         Cube feedforward_output = feedforward_layer.forward(attention_add_norm);
         auto ffEnd = std::chrono::system_clock::now();
-        std::chrono::duration<float> elapsed_seconds = ffEnd - ffStart;
-        printf("ff cost: %.6fs\n", elapsed_seconds.count());
+        std::chrono::duration<float> ff_seconds = ffEnd - ffStart;
+        printf("FF forward cost:\t%.6fs\n", ff_seconds.count());
 
         // Add and normalize (residual connection + layer normalization)
         Cube output = feedforward_norm.forward(attention_add_norm + feedforward_output);
 
         auto ffnEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> total_seconds = ffnEnd - mhaStart;
-        printf("total cost: %.6fs\n", total_seconds.count());
+        printf("Total forward cost:\t%.6fs\n", total_seconds.count());
 
         return output;
     }
