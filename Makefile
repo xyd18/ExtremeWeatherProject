@@ -7,7 +7,7 @@ CXX_MPI := mpic++
 
 HEADERS := csrc/include/*.h
 COMMON_SOURCES :=
-TARGETS := transformer-seq transformer-cube transformer-tmp transformer-tmp-cube ViT
+TARGETS := transformer-seq transformer-cube transformer-tmp transformer-tmp-cube ViT transformer-openmp
 
 # Default build target
 .PHONY: all debug release clean format check
@@ -41,6 +41,10 @@ $(OUTPUTDIR)debug-transformer-tmp-cube $(OUTPUTDIR)release-transformer-tmp-cube:
 $(OUTPUTDIR)debug-ViT $(OUTPUTDIR)release-ViT: $(HEADERS) csrc/src/Vit.cpp
 	@mkdir -p $(OUTPUTDIR)
 	$(CXX_MPI) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/Vit.cpp
+
+$(OUTPUTDIR)debug-transformer-openmp $(OUTPUTDIR)release-transformer-openmp: $(HEADERS) csrc/src/transformer_openmp.cpp
+	@mkdir -p $(OUTPUTDIR)
+	$(CXX_SEQ) -o $@ $(CFLAGS) -fopenmp -DSEQ $(COMMON_SOURCES) csrc/src/transformer_openmp.cpp
 
 format:
 	clang-format -i csrc/src/*.cpp csrc/include/*.h

@@ -157,5 +157,23 @@ inline void relu_backward_cube(Cube grad, Cube input) {
     }
 }
 
+// inline void concate_cube(std::vector<Cube> input_list, int dimension) {
+//     switch (dimension) {
+//         case 2
+//             Cube output(input_list[0].batch_size, input_list[0].rows, input_list[0].cols * input_list.size());
+//             for(int b = 0;b < input_list[0].batch_size;b++) {
+//                 for(int i = 0;i < input_list[0].rows;i++) {
+//                     for(int j = 0;j < input_list[0].cols;j++) {
+//                         for(int i = 0;i < input_list.size();i++) {
+//                             output(b, n, c * input_list.size() + i) = input_list[i](b, n, c);
+//                         }
+//                     }
+//                 }
+//             }
+//         default:
+//             break;
+//     }
+// }
+
 } // namespace common
 #endif

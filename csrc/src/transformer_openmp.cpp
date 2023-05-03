@@ -1,29 +1,34 @@
-#include "../include/transformer_cube.h"
+#include <assert.h>
+#include <random>
+#include "../include/transformer_openmp.h"
 
-int main() {
+int main(int argc, char *argv[]) {
     // Parameters for demonstration purposes
     int input_dim = 512;   // Dimension of input representation
     int hidden_dim = 2048; // Dimension of hidden representation
-    int output_dim = 32;   // Dimension of output representation
-    int batch_size = 32;   // Number of input samples in the batch
+    int batch_size = 32;  // Number of input samples in the batch
     int seq_length = 100;
+    int num_heads = 8;    // Number of heads in the multi-head attention sublayer
+    int num_workers = 8;
+    assert (hidden_dim % num_workers == 0);
+    assert (input_dim % num_heads == 0);
+    std::cout << "==================Transformer Encoder Layer: OpenMP Model/Tensor Model Parallel Version==================" << std::endl;
 
-    std::cout << "==================Transformer Encoder Layer==================" << std::endl;
-    TransformerEncoderLayer_cube transformer(input_dim, hidden_dim, 8);
+    TransformerEncoderLayer_openmp transformer(input_dim, hidden_dim, num_heads, num_workers);
 
-    Cube input(batch_size, seq_length, input_dim); 
-
+    // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
+    Cube input(batch_size, seq_length, input_dim);
+    input.reset();
 #ifdef DEBUG
     printf("TransformerEncoderLayer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
 #endif
 
-    // forward pass
+    // Forward pass
     Cube output = transformer.forward(input);
-
 #ifdef DEBUG
     printf("TransformerEncoderLayer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
 #endif
-
+   
     // form random labels
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
@@ -43,6 +48,6 @@ int main() {
 #ifdef DEBUG
     printf("TransformerEncoderLayer dI size: (batch_size=%d, seq_len=%d, d_model=%d)\n", dI.batch_size, dI.rows, dI.cols);
 #endif
-    
-    return 0;
+
+    printf("==================Process finished==================\n");
 }

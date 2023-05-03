@@ -6,7 +6,7 @@
 #include "mpi.h"
 #include "feedforward_tmp_cube.h"
 #include "dropout.h"
-#include "matrix.h"
+#include "cube.h"
 #include "layernorm_cube.h"
 #include "multiheadattention_cube.h"
 

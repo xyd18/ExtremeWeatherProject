@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 
     // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
     Cube input(batch_size, seq_length, input_dim);
+    input.reset();
 #ifdef DEBUG
     printf("TransformerEncoderLayer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
 #endif
