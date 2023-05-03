@@ -7,7 +7,7 @@ CXX_MPI := mpic++
 
 HEADERS := csrc/include/*.h
 COMMON_SOURCES :=
-TARGETS := transformer-seq transformer-cube transformer-tmp transformer-tmp-cube ViT
+TARGETS := transformer-cube transformer-tmp-cube ViT
 
 # Default build target
 .PHONY: all debug release clean format check

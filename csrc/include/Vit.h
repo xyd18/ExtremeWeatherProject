@@ -4,6 +4,7 @@
 #include <mpi.h>
 
 #include "transformer_cube.h"
+#include "transformer_tmp_cube.h"
 #include "cube.h"
 #include "sequential.h"
 #include "utils.h"
@@ -58,7 +59,8 @@ public:
 #ifdef DEBUG
                 printf("[Worker %d] VisionTransformer() add layer %d\n", pid, i);
 #endif    
-                    my_stage.layers.emplace_back(hidden_dim, hidden_dim, num_attention_heads);
+                    TransformerEncoderLayer_cube* layer = new TransformerEncoderLayer_cube(hidden_dim, hidden_dim, num_attention_heads);
+                    my_stage.layers.push_back(layer);
                 }
 #ifdef DEBUG
                 printf("[Worker %d] VisionTransformer() finish adding layer\n", pid);
@@ -80,15 +82,29 @@ public:
         {
             if (!options.usingTMP)
             {
+                //not using pipeline and tensor
                 for (int i = 0; i < num_hidden_layers; ++i)
                 {
-                    my_stage.layers.emplace_back(hidden_dim, hidden_dim, num_attention_heads);
+                    TransformerEncoderLayer_cube* layer = new TransformerEncoderLayer_cube(hidden_dim, hidden_dim, num_attention_heads);
+                    my_stage.layers.push_back(layer);
                 }
             }
             else
             {
                 // TODO: only using tensor
+                for (int i = 0; i < num_hidden_layers; ++i)
+                {
+                    TransformerEncoderLayerTMP_CUBE* layer = new TransformerEncoderLayerTMP_CUBE(hidden_dim, hidden_dim, num_attention_heads, pid, nproc);
+                    my_stage.layers.push_back(layer);
+                }
             }
+        }
+    }
+    ~VisionTransformer()
+    {
+        for (int i = 0; i < my_stage.layers.size(); ++i)
+        {
+            delete my_stage.layers[i];
         }
     }
     Cube forward(const Cube &input)
@@ -164,6 +180,7 @@ public:
             else
             {
                 // TODO: only using tensor
+                output = my_stage.forward(input);
             }
         }
 

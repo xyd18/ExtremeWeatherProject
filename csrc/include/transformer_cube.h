@@ -3,12 +3,13 @@
 
 #include <cmath>
 #include <chrono>
+#include "model.h"
 #include "feedforward_cube.h"
 #include "matrix.h"
 #include "layernorm_cube.h"
 #include "multiheadattention_cube.h"
 
-class TransformerEncoderLayer_cube {
+class TransformerEncoderLayer_cube : public Model{
 public:
     MultiHeadAttention_cube multi_head_attention; // Multi-Head Attention sublayer
     LayerNorm_cube attention_norm;                // Layer normalization for attention sublayer
@@ -44,7 +45,7 @@ public:
     }
 
     // Forward pass of the transformer encoder layer
-    Cube forward(const Cube& input) {
+    Cube forward(const Cube& input) override {
         auto mhaStart = std::chrono::system_clock::now();
 
         // Pass input through the multi-head attention sublayer
@@ -75,6 +76,7 @@ public:
 
     // Backward pass of the transformer encoder layer
     Cube backward(const Cube& dO) {
+        return Cube(dO);
         // Matrix dFeedforward = feedforward_norm.backward(dO);
 
         // Matrix dFeedforwardAddNorm = feedforward_layer.backward(dFeedforward);

@@ -1,6 +1,7 @@
 #ifndef CUBE_H_
 #define CUBE_H_
 
+#include "matrix.h"
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
