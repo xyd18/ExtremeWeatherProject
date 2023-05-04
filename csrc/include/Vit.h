@@ -5,6 +5,7 @@
 
 #include "transformer_cube.h"
 #include "transformer_tmp_cube.h"
+#include "transformer_openmp.h"
 #include "cube.h"
 #include "sequential.h"
 #include "utils.h"
@@ -75,7 +76,33 @@ public:
             }
             else
             {
-                // TODO: using pipeline and tensor
+                // Using pipeline and tensor
+                printf("============Pipeline and OpenMP TMP============\n");
+                num_stages = nproc;
+                if (num_hidden_layers % num_stages != 0 || num_hidden_layers < num_stages)
+                    throw std::runtime_error("Only support num_hidden_layers is a multiple of num_stages.");
+                blocks_per_stage = num_hidden_layers / num_stages;
+                printf("num_stages=%d blocks_per_stage=%d\n", num_stages, blocks_per_stage);
+                // Wrap the transformer blocks into stages
+                my_stage.layers.reserve(blocks_per_stage);
+                for (int i = 0; i < blocks_per_stage; i++) {
+#ifdef DEBUG
+                printf("[Worker %d] VisionTransformer() add layer %d\n", pid, i);
+#endif    
+                    int num_workers = 12;
+                    TransformerEncoderLayer_openmp* layer = new TransformerEncoderLayer_openmp(hidden_dim, hidden_dim, num_attention_heads, num_workers);
+                    my_stage.layers.push_back(layer);
+                }
+#ifdef DEBUG
+                printf("[Worker %d] VisionTransformer() finish adding layer\n", pid);
+#endif
+                if (pid == 0)
+                    first_stage = true;
+                if (pid == num_stages - 1)
+                    last_stage = true;
+#ifdef DEBUG
+                printf("[Worker %d] VisionTransformer() first_stage=%d last_stage=%d\n", pid, first_stage, last_stage);
+#endif
             }
         }
         else
@@ -123,8 +150,8 @@ public:
 
         if (options.usingPip)
         {
-            if (!options.usingTMP)
-            {
+            // if (!options.usingTMP)
+            // {
                 int total_time_slices = num_stages + num_micro - 1;
                 Cube my_input(input.batch_size / num_micro, input.rows, input.cols);
                 MPI_Barrier(MPI_COMM_WORLD);
@@ -208,11 +235,11 @@ public:
                 }
                 // result is stored in last_stage worker, FIXME: broadcast to all or just to pid 0?
                 MPI_Bcast(output.data, output.batch_size * output.rows * output.cols, MPI_FLOAT, num_stages - 1, MPI_COMM_WORLD);
-            }
-            else
-            {
-                // TODO: using pipeline and tensor
-            }
+            // }
+            // else
+            // {
+            //     // TODO: using pipeline and tensor
+            // }
         }
         else
         {

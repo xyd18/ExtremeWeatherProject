@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
     }
 
     // Instantiate the ViT model
-    int num_hidden_layers = 12;  // Number of Transformer blocks
+    int num_hidden_layers = 24;  // Number of Transformer blocks
     int num_classes = 1000; // Number of classes for classification
     int patch_size = 16;  // Patch size for tokenization
     int num_channels = 3;  // Number of num_channels in the input image (3 for RGB)
@@ -32,7 +32,11 @@ int main(int argc, char** argv) {
     VisionTransformer vit(options, num_hidden_layers, 12, num_classes, patch_size, num_channels, hidden_dim);
 
     Cube input(batch_size, seq_length, hidden_dim);
-    input.load(options.inputFile);
+    if (options.inputFile == "") {
+        input.reset();
+    } else {
+        input.load(options.inputFile);
+    }
 
 #ifdef DEBUG
     printf("VisionTransformer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);

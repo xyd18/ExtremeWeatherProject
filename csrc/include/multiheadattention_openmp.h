@@ -1,5 +1,5 @@
-#ifndef MULTIHEADATTENTION_H_
-#define MULTIHEADATTENTION_H_
+#ifndef MULTIHEADATTENTION_OPENMP_H_
+#define MULTIHEADATTENTION_OPENMP_H_
 
 #include "matrix.h"
 #include "cube.h"

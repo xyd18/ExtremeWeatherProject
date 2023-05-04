@@ -1,5 +1,5 @@
-#ifndef TRANSFORMER_TMP_H_
-#define TRANSFORMER_TMP_H_
+#ifndef TRANSFORMER_OPENMP_H_
+#define TRANSFORMER_OPENMP_H_
 
 #include <cmath>
 #include <chrono>
@@ -10,7 +10,7 @@
 #include "layernorm_cube.h"
 
 
-class TransformerEncoderLayer_openmp {
+class TransformerEncoderLayer_openmp : public Model{
 public:
     int num_workers;
     MultiHeadAttention_openmp multi_head_attention; // Multi-Head Attention sublayer
@@ -26,12 +26,12 @@ public:
           attention_norm(input_dim, 1e-6f) {}
 
     // Forward pass of the transformer encoder layer
-    Cube forward(const Cube& input) {
+    Cube forward(const Cube& input) override{
         auto mhaStart = std::chrono::system_clock::now();
         // Pass input through the multi-head attention sublayer
         Cube attention_output = multi_head_attention.forward(input);
 #ifdef DEBUG
-        printf("TransformerEncoderLayerTMP_CUBE::forward attention_output shape: (batch_size=%d, seq_len=%d, d_model=%d)\n",attention_output.batch_size, attention_output.rows, attention_output.cols);
+        printf("TransformerEncoderLayer_OpenMP::forward attention_output shape: (batch_size=%d, seq_len=%d, d_model=%d)\n",attention_output.batch_size, attention_output.rows, attention_output.cols);
 #endif
         auto mhaEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;

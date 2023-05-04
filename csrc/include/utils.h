@@ -23,6 +23,10 @@ StartupOptions parseOptions(int argc, char **argv) {
     StartupOptions rs;
     rs.usingPip = false;
     rs.usingTMP = false;
+    rs.outputFile = "";
+    rs.inputFile = "";
+    rs.numMicroBatch = 4;
+    rs.numBatchSize = 32;
 
     for (int i = 1; i < argc; i++) {
         if (i < argc - 1) {

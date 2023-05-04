@@ -40,7 +40,7 @@ $(OUTPUTDIR)debug-transformer-tmp-cube $(OUTPUTDIR)release-transformer-tmp-cube:
 
 $(OUTPUTDIR)debug-ViT $(OUTPUTDIR)release-ViT: $(HEADERS) csrc/src/Vit.cpp
 	@mkdir -p $(OUTPUTDIR)
-	$(CXX_MPI) -o $@ $(CFLAGS) -DSEQ $(COMMON_SOURCES) csrc/src/Vit.cpp
+	$(CXX_MPI) -o $@ $(CFLAGS) -fopenmp -DSEQ $(COMMON_SOURCES) csrc/src/Vit.cpp
 
 $(OUTPUTDIR)debug-transformer-openmp $(OUTPUTDIR)release-transformer-openmp: $(HEADERS) csrc/src/transformer_openmp.cpp
 	@mkdir -p $(OUTPUTDIR)

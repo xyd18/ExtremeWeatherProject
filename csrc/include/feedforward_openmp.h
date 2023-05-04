@@ -1,5 +1,5 @@
-#ifndef FEEDFORWARDLAYER_TMP_H_
-#define FEEDFORWARDLAYER_TMP_H_
+#ifndef FEEDFORWARDLAYER_OPENMP_H_
+#define FEEDFORWARDLAYER_OPENMP_H_
 
 #include "matrix.h"
 #include "linearlayer_cube.h"
