@@ -43,7 +43,7 @@ workers = [1]
 if version == 'tmp':
     workers = [1,2,4,8]
 elif version == 'pp' or version == 'pp_tmp':
-    workers = [4] #[1,2,4]
+    workers = [8,4,2,1]
 
 os.system('mkdir -p logs')
 os.system('rm -rf logs/*')
@@ -55,10 +55,23 @@ for worker in workers:
     cmd = f'mpirun -np {worker} {prog} -o {output_file} > {log_file}' if version == "tmp" \
         else f'./{prog} > {log_file}'
     if(version == 'pp'):
-        cmd = f'mpirun -np {worker} {prog} -pip -out Vit_output.bin > {log_file}'
+        for micro_num in [4,8,16,32]:
+            log_file = f'logs/{prog_name}_{version}_{worker}_{micro_num}.log'
+            cmd = f'mpirun -np {worker} {prog} -pip -out Vit_output.bin -micro {micro_num} > {log_file}'
+            print(log_file)
+            ret = os.system(cmd)
+            assert ret == 0, 'ERROR -- nbody exited with errors'
     elif(version == 'pp_tmp'):
-        cmd = f'mpirun -np {worker} {prog} -pip -tmp -out Vit_output.bin -micro 32 > {log_file}'
-    ret = os.system(cmd)
-    assert ret == 0, 'ERROR -- nbody exited with errors'
+        for micro_num in [4,8,16,32]:
+            log_file = f'logs/{prog_name}_{version}_{worker}_{micro_num}.log'
+            cmd = f'mpirun -np {worker} {prog} -pip -tmp -out Vit_output.bin -micro {micro_num} > {log_file}'
+            print(log_file)
+            ret = os.system(cmd)
+            assert ret == 0, 'ERROR -- nbody exited with errors'
+    else:
+            cmd = f'mpirun -np {worker} {prog} -o {output_file} > {log_file}' if version == "tmp" \
+                 else f'./{prog} > {log_file}'
+            ret = os.system(cmd)
+            assert ret == 0, 'ERROR -- nbody exited with errors'
 
 print("Execution finished")
