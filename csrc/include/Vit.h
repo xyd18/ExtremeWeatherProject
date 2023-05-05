@@ -82,7 +82,9 @@ public:
                 if (num_hidden_layers % num_stages != 0 || num_hidden_layers < num_stages)
                     throw std::runtime_error("Only support num_hidden_layers is a multiple of num_stages.");
                 blocks_per_stage = num_hidden_layers / num_stages;
+#ifdef DEBUG
                 printf("num_stages=%d blocks_per_stage=%d\n", num_stages, blocks_per_stage);
+#endif
                 // Wrap the transformer blocks into stages
                 my_stage.layers.reserve(blocks_per_stage);
                 for (int i = 0; i < blocks_per_stage; i++) {

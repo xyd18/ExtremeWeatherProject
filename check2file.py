@@ -9,8 +9,8 @@ def compare_files(file1, file2):
                 # Both files have reached the end simultaneously
                 return True
 
-file1 = 'output_1.bin'
-file2 = 'output_2.bin'
+file1 = 'output1.bin'
+file2 = 'output2.bin'
 
 if compare_files(file1, file2):
     print("The files are the same.")

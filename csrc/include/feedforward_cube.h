@@ -39,14 +39,14 @@ public:
     Cube forward(const Cube& input) override {
 
         #ifdef DEBUG
-        printf("FeedForwardLayer input size: (batch_size=%d, seq_length=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
+        // printf("FeedForwardLayer input size: (batch_size=%d, seq_length=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
         #endif
 
         // Pass input through the first linear layer
         hidden = linear1.forward(input);
 
         #ifdef DEBUG
-        printf("FeedForwardLayer hidden size: (batch_size=%d, seq_length=%d, hidden_size=%d)\n", hidden.batch_size, hidden.rows, hidden.cols);
+        // printf("FeedForwardLayer hidden size: (batch_size=%d, seq_length=%d, hidden_size=%d)\n", hidden.batch_size, hidden.rows, hidden.cols);
         #endif
 
         // Apply activation function (e.g., ReLU) to the output of the first linear layer
@@ -56,7 +56,7 @@ public:
         Cube output = linear2.forward(hidden);
 
         #ifdef DEBUG
-        printf("FeedForwardLayer output size: (batch_size=%d, seq_length=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
+        // printf("FeedForwardLayer output size: (batch_size=%d, seq_length=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
         #endif
 
         return output;
