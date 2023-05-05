@@ -123,8 +123,16 @@ public:
         std::cout << "MHAL Forward Individual time: " << elapsed_individual.count() << std::endl;
 
         // concatenate head
-        for(int h = 0; h < num_workers; ++h) {
-            concat_heads = concat_heads + heads_list[h];
+        // printf("head(%d, %d, %d)\n", heads_list[0].batch_size, heads_list[0].rows, heads_list[0].cols);
+        // printf("concat_heads(%d, %d, %d)\n", concat_heads.batch_size, concat_heads.rows, concat_heads.cols);
+        for(int h = 0; h < num_heads; ++h) {
+            for (int b = 0; b < concat_heads.batch_size; ++b) {
+                for (int i = 0; i < concat_heads.rows; ++i) {
+                    for (int j = 0; j < concat_heads.cols; ++j) {
+                        concat_heads(b, i, j) += heads_list[h](b, i, j);
+                    }
+                }
+            }
         }
         
         // after_concat_cache = concat_heads;
