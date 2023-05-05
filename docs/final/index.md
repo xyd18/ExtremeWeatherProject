@@ -95,7 +95,7 @@ Overall, the parallelization of multi-layer Transformer encoders using the pipel
 
 ### Project Structure
 
-We built our project from scratch, written purely using C++. We did not use the PyTorch C++ API or any other DL library. Our data structure for the forward and backward functions is a class called Cube, which represents a 3-dimensional tensor with dimensions ($batch\_size$, $sequence\_length$, $model\_dimension$). To ensure that all models and sub-models have the necessary functions, we have implemented an abstract class called Model as the parent class. Every other model we implement is derived from the Model class and must override the forward function. Additionally, we have a Sequential class that connects multiple layers together in a sequence by linking the output of one layer to the input of the next.
+We built our project from scratch, written purely using C++. We did not use the PyTorch C++ API or any other DL library. Our data structure for the forward and backward functions is a class called Cube, which represents a 3-dimensional tensor with dimensions (batch\_size, sequence\_length, model\_dimension). To ensure that all models and sub-models have the necessary functions, we have implemented an abstract class called Model as the parent class. Every other model we implement is derived from the Model class and must override the forward function. Additionally, we have a Sequential class that connects multiple layers together in a sequence by linking the output of one layer to the input of the next.
 
 Following the guidelines outlined in the Transformer paper, we have created a sequential version of the Transformer Encoding Layer. This implementation incorporates various components such as the Multi-head Attention Layer, Feed Forward Layer, Layer Normalization and residual connection, Dropout, Softmax, and Cross Entropy Loss calculation.
 
@@ -253,23 +253,23 @@ Furthermore, for higher micro batch quantities, employing multiple processes res
 </figure>
 </center>
 
-In order to gain further insight into the results, it is beneficial to calculate the performance in ideal conditions. If we assume that we have only one process and one micro batch, the time required for the forward function on a single process is denoted by $T_f$.
+In order to gain further insight into the results, it is beneficial to calculate the performance in ideal conditions. If we assume that we have only one process and one micro batch, the time required for the forward function on a single process is denoted by T_f.
 
-If we have $p$ processes, the model layers are evenly divided into $p$ stages, so each process is responsible for $1/p$ of the total layer count. As a result, the time required for the forward function is $T_f/p$.
+If we have p processes, the model layers are evenly divided into p stages, so each process is responsible for 1/p of the total layer count. As a result, the time required for the forward function is T_f/p.
 
-Moreover, if we have $p$ processes and a micro batch number of $m$, the micro batch size is set to $1/m$ as the entire input batch. Consequently, the time required for the forward function on a single process and a single micro batch becomes $T_f/mp$.
+Moreover, if we have p processes and a micro batch number of m, the micro batch size is set to 1/m as the entire input batch. Consequently, the time required for the forward function on a single process and a single micro batch becomes T_f/mp.
 
-Therefore, we have $p$ processes and a micro batch number of $m$, the total time for forward function should be $(m+p-1)\times(1/mp)\times T_f$.
+Therefore, we have p processes and a micro batch number of m, the total time for forward function should be (m+p-1) x (1/mp) x T_f.
 
-For the case of a single processor $(p=1)$, the total time $(T_{total})$ is equal to $T_f$ and is independent of the micro batch number $(m)$.
+For the case of a single processor (p=1), the total time (T_{total}) is equal to T_f and is independent of the micro batch number (m).
 
-In the case of multiple processors, the total time $(T_{total})$ can be calculated using the formula $T_{total} = (m+p-1)/mp \times T_f = (1/p + (p-1)/m) \times T_f $. This formula reveals that as the micro batch number $(m)$ increases, the total time decreases. In other words, a larger micro batch size leads to a reduction in the overall computation time when using multiple processors.
+In the case of multiple processors, the total time (T_{total}) can be calculated using the formula T_{total} = (m+p-1)/mp x T_f = (1/p + (p-1)/m) x T_f. This formula reveals that as the micro batch number (m) increases, the total time decreases. In other words, a larger micro batch size leads to a reduction in the overall computation time when using multiple processors.
 
-The speedup for $p$ workers compared to a single worker can be calculated using the formula $T_f / [(m+p-1) \times (1/mp) \times T_f] = 1 / [(m+p-1) \times (1/mp)] = mp / (m+p-1) = m / (1 + (m-1)/p)$. For a given micro batch number $(m)$, as the number of workers $(p)$ increases, the speedup also increases. In other words, when the number of processors is larger, the speedup is greater, indicating improved efficiency and faster computation times.
+The speedup for p workers compared to a single worker can be calculated using the formula T_f / [(m+p-1) x (1/mp) x T_f] = 1 / [(m+p-1) x (1/mp)] = mp / (m+p-1) = m / (1 + (m-1)/p). For a given micro batch number (m), as the number of workers (p) increases, the speedup also increases. In other words, when the number of processors is larger, the speedup is greater, indicating improved efficiency and faster computation times.
 
 We notice that when Micro batch number is stable, as the number of devices increases, the increasing speed-up relaxes, especially in low Micro batch numbers. We believe this is due to the unchangeable latency. By looking at the analysis diagram above, we can break down the latency into two parts: All Micro batches computed in one device (part 1) + A single Micro batch computed by all devices (part 2). We find that part 2 actually stays the same, even if devices are more! This is because a single Micro batch might get executed faster in one stage (as the number of layers in one device decreases), it now has to traverse through more devices. This makes part 2 unchanged. As part 1 becomes smaller, there is a limit of parallelism achievable, similar to what Amdahl's Law suggests.
 
-The speedup for $p$ workers compared to a single worker, given a fixed number of workers $(p)$, can be calculated using the formula $T_f / [(m+p-1) \times (1/mp) \times T_f] = 1 / [(m+p-1) \times (1/mp)] = mp / (m+p-1) = p / (1 + (p-1)/m)$. As the micro batch number $(m)$ increases, the speedup also increases. This indicates that a larger micro batch size leads to higher speedup when using multiple workers.
+The speedup for p workers compared to a single worker, given a fixed number of workers (p), can be calculated using the formula T_f / [(m+p-1) x (1/mp) x T_f] = 1 / [(m+p-1) x (1/mp)] = mp / (m+p-1) = p / (1 + (p-1)/m). As the micro batch number (m) increases, the speedup also increases. This indicates that a larger micro batch size leads to higher speedup when using multiple workers.
 
 The influence of communication time, specifically the `MPI_ISend` and `MPI_Recv` operations, is not extensively discussed in our report. This is due to the observation that the communication time for each processor constitutes a negligible portion, approximately 0.01%, of the total forward time.
 
