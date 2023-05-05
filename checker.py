@@ -52,9 +52,11 @@ for worker in workers:
     print(f'--- running {prog_name} | {version} on {worker} workers ---')
     output_file = f'logs/{prog_name}_{version}_{worker}.txt'
     log_file = f'logs/{prog_name}_{version}_{worker}.log'
-    cmd = f'mpirun -np {worker} {prog} -o {output_file} > {log_file}' if version == "tmp" \
-        else f'./{prog} > {log_file}'
-    if(version == 'pp'):
+    if(version == 'seq'):
+        cmd = f'./{prog} > {log_file}'
+    elif(version == 'tmp'):
+        cmd = f'mpirun -np {worker} {prog} -o {output_file} > {log_file}'
+    elif(version == 'pp'):
         cmd = f'mpirun -np {worker} {prog} -pip -out Vit_output.bin > {log_file}'
     elif(version == 'pp_tmp'):
         cmd = f'mpirun -np {worker} {prog} -pip -tmp -out Vit_output.bin -micro 32 > {log_file}'

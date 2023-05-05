@@ -37,7 +37,12 @@ public:
         printf("TransformerEncoderLayerTMP_CUBE::forward attention_output shape: (batch_size=%d, seq_len=%d, d_model=%d)\n",attention_output.batch_size, attention_output.rows, attention_output.cols);
 #endif
         Cube attention_output_global = Cube(attention_output.batch_size, attention_output.rows, attention_output.cols);
+        auto mha_comm_start = std::chrono::system_clock::now();
         MPI_Allreduce(attention_output.data, attention_output_global.data, attention_output.batch_size * attention_output.rows * attention_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto mha_comm_end = std::chrono::system_clock::now();
+        std::chrono::duration<float> mha_comm_seconds = mha_comm_end - mha_comm_start;
+        printf("[Worker %d] multihead attention communication cost: %.6fs\n", pid, mha_comm_seconds.count());
+
         auto mhaEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> mha_forward_seconds = mhaEnd - mhaStart;
         printf("[Worker %d] multihead attention forward cost: %.6fs\n", pid, mha_forward_seconds.count());
@@ -46,12 +51,16 @@ public:
         // DESIGN: accroding megatron LM, LN, Residuals computation are duplicated and optimzied inidividually in each process, instead of one process + broadcast
         Cube ff_input = attention_norm.forward(input + attention_output_global);
         
-        auto ffStart = std::chrono::system_clock::now(); // get the current time
-        // Pass the result through the feedforward sublayer
+        auto ffStart = std::chrono::system_clock::now(); 
         Cube ff_output = feedforward_layer.forward(ff_input);
-        // gather output from all processes
+        
+        auto ff_comm_start = std::chrono::system_clock::now();
         Cube ff_output_reduce(ff_output.batch_size, ff_output.rows, ff_output.cols);
         MPI_Allreduce(ff_output.data, ff_output_reduce.data, ff_output.batch_size * ff_output.rows * ff_output.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto ff_comm_end = std::chrono::system_clock::now();
+        std::chrono::duration<float> ff_comm_seconds = ff_comm_end - ff_comm_start;
+        printf("[Worker %d] feedforward communication cost: %.6fs\n", pid, ff_comm_seconds.count());
+        
         auto ffEnd = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = ffEnd - ffStart;
         printf("[Worker %d] ff cost: %.6fs\n", pid, elapsed_seconds.count());
@@ -69,13 +78,17 @@ public:
 
     // Backward pass of the transformer encoder layer
     Cube backward(const Cube& dO) {
-        // FIXME: parallel, boy
         auto ff_start = std::chrono::system_clock::now();
         Cube d_ffn = feedforward_norm.backward(dO);
         
         Cube d_ff = feedforward_layer.backward(d_ffn);
+        auto ff_comm_start = std::chrono::system_clock::now();
         Cube d_ff_global(d_ff.batch_size, d_ff.rows, d_ff.cols);
         MPI_Allreduce(d_ff.data, d_ff_global.data, d_ff.batch_size * d_ff.rows * d_ff.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto ff_comm_end = std::chrono::system_clock::now();
+        std::chrono::duration<float> ff_comm_seconds = ff_comm_end - ff_comm_start;
+        printf("[Worker %d] feedforward communication cost: %.6fs\n", pid, ff_comm_seconds.count());
+
         auto ff_end = std::chrono::system_clock::now();
         std::chrono::duration<float> ff_backward_cost = ff_end - ff_start;
         printf("[Worker %d] FF backward cost: %.6fs\n", pid, ff_backward_cost.count());
@@ -84,8 +97,14 @@ public:
         
         auto mhab_start = std::chrono::system_clock::now();
         Cube d_mha = multi_head_attention.backward(d_mha_n);
+
+        auto mha_comm_start = std::chrono::system_clock::now();
         Cube d_mha_global(d_mha.batch_size, d_mha.rows, d_mha.cols);
         MPI_Allreduce(d_mha.data, d_mha_global.data, d_mha.batch_size * d_mha.rows * d_mha.cols, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        auto mha_comm_end = std::chrono::system_clock::now();
+        std::chrono::duration<float> mha_comm_seconds = mha_comm_end - mha_comm_start;
+        printf("[Worker %d] multihead attention communication cost: %.6fs\n", pid, mha_comm_seconds.count());
+        
         auto mhab_end = std::chrono::system_clock::now();
         std::chrono::duration<float> mha_backward_cost = mhab_end - mhab_start;
         printf("[Worker %d] MHAL backward cost: %.6fs\n", pid, mha_backward_cost.count());
