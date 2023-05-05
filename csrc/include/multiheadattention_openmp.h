@@ -16,32 +16,34 @@ public:
     std::vector<Matrix> W_q;
     std::vector<Matrix> W_k;
     std::vector<Matrix> W_v;
-    Matrix W_o;
+    std::vector<Matrix> W_o;
+    // Matrix W_o;
 
     std::vector<Cube> Q_cache;
     std::vector<Cube> K_cache;
     std::vector<Cube> V_cache;
     std::vector<Cube> QK_softmax_cache;
     Cube X_cache;
-    Cube after_concat_cache;
+    std::vector<Cube> before_projection_cache;
 
     MultiHeadAttention_openmp(int d_model, int d_k, int num_heads, int num_workers) 
-        : d_model(d_model), num_heads(num_heads), d_k(d_k), num_workers(num_workers), 
-        W_o(d_model, d_model) {
+        : d_model(d_model), num_heads(num_heads), d_k(d_k), num_workers(num_workers) {
+        // W_o(d_model, d_model) {
         W_q.reserve(num_heads);
         W_k.reserve(num_heads);
         W_v.reserve(num_heads);
-        // W_o.reserve(num_heads);
+        W_o.reserve(num_heads);
         for (int i = 0; i < num_heads; ++i) {
             W_q.emplace_back(d_model, d_k);
             W_k.emplace_back(d_model, d_k);
             W_v.emplace_back(d_model, d_k);
-            // W_o.emplace_back(d_k, d_model);
+            W_o.emplace_back(d_k, d_model);
         }
         Q_cache.reserve(num_heads);
         K_cache.reserve(num_heads);
         V_cache.reserve(num_heads);
         QK_softmax_cache.reserve(num_heads);
+        before_projection_cache.reserve(num_heads);
         reset();
 #ifdef DEBUG
         std::cout << "[MultiHeadAttention OpenMP constructor] Initialization Completed." << std::endl;
@@ -64,17 +66,18 @@ public:
             W_q[i].reset();
             W_k[i].reset();
             W_v[i].reset();
-            // W_o[i].reset();
+            W_o[i].reset();
         }
-        W_o.reset();
+        // W_o.reset();
     }
 
     // Forward pass of the multi-head attention layer
     Cube forward(const Cube& X) {
         X_cache = X;
-        // std::vector<Cube> heads_list(num_heads);
+        std::vector<Cube> heads_list(num_heads);
         Cube concat_heads(X.batch_size, X.rows, d_model);
-        #pragma omp parallel for num_threads(num_workers)
+        auto start_individual = std::chrono::high_resolution_clock::now();
+        #pragma omp parallel for num_threads(num_workers) // schedule(dynamic, num_heads)
         for (int h = 0; h < num_heads; ++h) {
             Cube Q = X * W_q[h]; // (batch_size, seq_length, d_model) * (d_model, d_k) = (batch_size, seq_length, d_k)
             Cube K = X * W_k[h];
@@ -104,31 +107,33 @@ public:
             QK_softmax_cache[h] = attention_scores;
             Cube head = attention_scores * V; // (batch_size, seq_length, seq_length) * (batch_size, seq_length, d_v) = (batch_size, seq_length, d_v)
 
-            int col_index = h * d_k;
-            for (int b = 0; b < X.batch_size; ++b) {
-                for (int i = 0; i < X.rows; ++i) { // concate on last dimension
-                    for (int j = 0; j < d_k; ++j) {
-                        concat_heads(b, i, col_index + j) = head(b, i, j);
-                    }
-                }
-            }
+            // int col_index = h * d_k;
+            // for (int b = 0; b < X.batch_size; ++b) {
+            //     for (int i = 0; i < X.rows; ++i) { // concate on last dimension
+            //         for (int j = 0; j < d_k; ++j) {
+            //             concat_heads(b, i, col_index + j) = head(b, i, j);
+            //         }
+            //     }
+            // }
+            before_projection_cache[h] = head;
+            heads_list[h] = head * W_o[h];
         }
+        auto end_individual = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_individual = end_individual - start_individual;
+        std::cout << "MHAL Forward Individual time: " << elapsed_individual.count() << std::endl;
 
         // concatenate head
-        // for(int h = 0; h < num_workers; ++h) {
-        //     int col_index = h * d_k;
-        //     for (int b = 0; b < X.batch_size; ++b) {
-        //         for (int i = 0; i < X.rows; ++i) { // concate on last dimension
-        //             for (int j = 0; j < d_k; ++j) {
-        //                 concat_heads(b, i, col_index + j) = heads_list[h](b, i, j);
-        //             }
-        //         }
-        //     }
-        // }
-        after_concat_cache = concat_heads;
+        for(int h = 0; h < num_workers; ++h) {
+            concat_heads = concat_heads + heads_list[h];
+        }
+        
+        // after_concat_cache = concat_heads;
         // Project concatenated heads to output
-        Cube output = concat_heads * W_o; // (batch_size, seq_length, d_k * heads_per_p) * (d_k * heads_per_p, d_model);
-        return output; // (batch_size, seq_length, d_model)
+        // Cube output = concat_heads * W_o; // (batch_size, seq_length, d_k * heads_per_p) * (d_k * heads_per_p, d_model);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - end_individual;
+        std::cout << "MHAL Forward Single time: " << elapsed.count() << std::endl;
+        return concat_heads; // (batch_size, seq_length, d_model)
     }
 
     /** Backward pass of the multi-head attention layer
@@ -147,20 +152,22 @@ public:
         int B = grad.batch_size;
         int N = grad.rows;
         int D = grad.cols;
-        Cube dH = grad * W_o.transpose(); // (B, N, h * d_v)
-        printf("dH(%d, %d, %d)\n", dH.batch_size, dH.rows, dH.cols);
+        // Cube dH = grad * W_o.transpose(); // (B, N, h * d_v)
+        // printf("dH(%d, %d, %d)\n", dH.batch_size, dH.rows, dH.cols);
         Cube dX_concate(B, N, D);
-        
+        // std::vector<Cube> dX_list(num_heads);
+        auto start_individual = std::chrono::high_resolution_clock::now();
         #pragma omp parallel for num_threads(num_workers)
         for(int h = 0; h < num_heads;h++) {
-            Cube dH_slice(B, N, d_k);
-            for(int b = 0;b < B;b++) {
-                for(int i = 0;i < N;i++) {
-                    for(int j = 0;j < d_k;j++) {
-                        dH_slice(b, i, j) = dH(b, i, h * d_k + j);
-                    }
-                }
-            }
+            // Cube dH_slice(B, N, d_k);
+            // for(int b = 0;b < B;b++) {
+            //     for(int i = 0;i < N;i++) {
+            //         for(int j = 0;j < d_k;j++) {
+            //             dH_slice(b, i, j) = dH(b, i, h * d_k + j);
+            //         }
+            //     }
+            // }
+            Cube dH_slice = grad * W_o[h].transpose();
             printf("dH_slice(%d, %d, %d)\n", dH_slice.batch_size, dH_slice.rows, dH_slice.cols);
 
             // Compute gradient w.r.t. concatenated Q,K,V
@@ -191,8 +198,9 @@ public:
             // Compute gradient w.r.t. input X
             Cube dX = dQ * W_q[h] + dK * W_k[h] + dV * W_v[h];
             printf("dX(%d, %d, %d)\n", dX.batch_size, dX.rows, dX.cols);
+            // dX_list[h] = dX;
             // Update weight gradients FIXME: need learning rate?
-            // FIXME: this just take advantage of d_model > d_k, actually not correct :(
+            // FIXME: this just take advantage of d_model > d_k
             for(int i = 0;i < d_model;i++) {
                 for(int j = 0;j < d_k;j++) {
                     float temp_q = W_q[h](i, j);
@@ -216,6 +224,7 @@ public:
             //         dX_concate(j, i * d_k + k) = dX_slice(j, k);
             //     }
             // }
+
             for(int b = 0;b < B;b++) {
                 for(int i = 0;i < N;i++) {
                     for(int j = 0;j < d_k;j++) {
@@ -223,21 +232,40 @@ public:
                     }
                 }
             }
-        }
 
-        // update W_o
-        Cube dW_o = after_concat_cache.transpose() * grad; // (B, h * d_v, d_model)
-        printf("dW_o(%d, %d, %d)\n", dW_o.batch_size, dW_o.rows, dW_o.cols);
-        for(int i = 0;i < W_o.rows;i++) {
-            for(int j = 0;j < W_o.cols;j++) {
-                float temp = W_o(i, j);
-                for(int b = 0;b < B;b++) {
-                    temp += dW_o(b, i, j);
+            // update W_o
+            Cube dW_o = before_projection_cache[h].transpose() * grad; // (B, d_v, d_model)
+            printf("dW_o(%d, %d, %d)\n", dW_o.batch_size, dW_o.rows, dW_o.cols);
+            for(int i = 0;i < W_o[h].rows;i++) {
+                for(int j = 0;j < W_o[h].cols;j++) {
+                    float temp = W_o[h](i, j);
+                    for(int b = 0;b < B;b++) {
+                        temp += dW_o(b, i, j);
+                    }
+                    W_o[h](i, j) = temp;
                 }
-                W_o(i, j) = temp;
             }
         }
+
+        auto end_individual = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration_individual = end_individual - start_individual;
+        printf("MHAL Backward individual time: %f\n", duration_individual.count());
+        // concate dX
+        // for(int h = 0; h < num_heads;h++) {
+        //     int col_index = h * d_k;
+        //     for(int b = 0;b < B;b++) {
+        //         for(int i = 0;i < N;i++) {
+        //             for(int j = 0;j < d_k;j++) {
+        //                 dX_concate(b, i, col_index + j) = dX_list[h](b, i, j);
+        //             }
+        //         }
+        //     }
+        // }
+        
         printf("dX_concate(%d, %d, %d)\n", dX_concate.batch_size, dX_concate.rows, dX_concate.cols);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - end_individual;
+        printf("MHAL Backward Single time: %f\n", duration.count());
         return dX_concate; // need concatenate
     }
 };

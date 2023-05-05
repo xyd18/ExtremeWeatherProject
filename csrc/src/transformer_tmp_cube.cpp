@@ -26,38 +26,40 @@ int main(int argc, char *argv[]) {
     // Instantiate FeedForwardLayer with specified input, hidden, and output dimensions
     TransformerEncoderLayerTMP_CUBE transformer(input_dim, hidden_dim, num_heads, pid, nproc);
 
-    // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
-    Cube input(batch_size, seq_length, input_dim);
-    input.reset();
-#ifdef DEBUG
-    printf("TransformerEncoderLayer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
-#endif
+    for(int itr = 0;itr < 5;itr++) {
+        // Input cube (batch size = batch_size, sequence length = seq_length, input dimension = input_dim)
+        Cube input(batch_size, seq_length, input_dim);
+        input.reset();
+    #ifdef DEBUG
+        printf("TransformerEncoderLayer input size: (batch_size=%d, seq_len=%d, d_model=%d)\n", input.batch_size, input.rows, input.cols);
+    #endif
 
-    // Forward pass
-    Cube output = transformer.forward(input);
-#ifdef DEBUG
-    printf("TransformerEncoderLayer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
-#endif
-   
-    // form random labels
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
-    Cube labels(batch_size, seq_length, input_dim);
-    for(int i = 0;i < batch_size;i++) {
-        for(int j = 0;j < seq_length;j++) {
-            int label = distribution(generator); // label for current token
-            for(int k = 0;k < input_dim;k++) {
-                labels(i, j, k) = k == label ? 1 : 0;
+        // Forward pass
+        Cube output = transformer.forward(input);
+    #ifdef DEBUG
+        printf("TransformerEncoderLayer Output size: (batch_size=%d, seq_len=%d, d_model=%d)\n", output.batch_size, output.rows, output.cols);
+    #endif
+    
+        // form random labels
+        std::default_random_engine generator;
+        std::uniform_int_distribution<int> distribution(0, input_dim - 1); 
+        Cube labels(batch_size, seq_length, input_dim);
+        for(int i = 0;i < batch_size;i++) {
+            for(int j = 0;j < seq_length;j++) {
+                int label = distribution(generator); // label for current token
+                for(int k = 0;k < input_dim;k++) {
+                    labels(i, j, k) = k == label ? 1 : 0;
+                }
             }
         }
-    }
 
-    // backward pass
-    Cube dO = common::softMaxCrossEntropyBackwardCube(output, labels);
-    Cube dI = transformer.backward(dO);
-#ifdef DEBUG
-    printf("TransformerEncoderLayer dI size: (batch_size=%d, seq_len=%d, d_model=%d)\n", dI.batch_size, dI.rows, dI.cols);
-#endif
+        // backward pass
+        Cube dO = common::softMaxCrossEntropyBackwardCube(output, labels);
+        Cube dI = transformer.backward(dO);
+    #ifdef DEBUG
+        printf("TransformerEncoderLayer dI size: (batch_size=%d, seq_len=%d, d_model=%d)\n", dI.batch_size, dI.rows, dI.cols);
+    #endif
+    }
 
     if(pid == 0) printf("Process %d finished successfully\n", pid);
     // Finalize MPI

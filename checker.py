@@ -60,18 +60,18 @@ for worker in workers:
             cmd = f'mpirun -np {worker} {prog} -pip -out Vit_output.bin -micro {micro_num} > {log_file}'
             print(log_file)
             ret = os.system(cmd)
-            assert ret == 0, 'ERROR -- nbody exited with errors'
     elif(version == 'pp_tmp'):
         for micro_num in [4,8,16,32]:
             log_file = f'logs/{prog_name}_{version}_{worker}_{micro_num}.log'
             cmd = f'mpirun -np {worker} {prog} -pip -tmp -out Vit_output.bin -micro {micro_num} > {log_file}'
             print(log_file)
             ret = os.system(cmd)
-            assert ret == 0, 'ERROR -- nbody exited with errors'
-    else:
-            cmd = f'mpirun -np {worker} {prog} -o {output_file} > {log_file}' if version == "tmp" \
-                 else f'./{prog} > {log_file}'
-            ret = os.system(cmd)
-            assert ret == 0, 'ERROR -- nbody exited with errors'
+    elif(version == 'seq'):
+        cmd = f'./{prog} > {log_file}'
+        ret = os.system(cmd)
+    elif(version == 'tmp'):
+        cmd = f'mpirun -np {worker} {prog} -o {output_file} > {log_file}'
+        ret = os.system(cmd)
+    assert ret == 0, 'ERROR -- nbody exited with errors'
 
 print("Execution finished")

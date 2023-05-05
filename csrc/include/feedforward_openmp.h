@@ -35,6 +35,7 @@ class FeedForwardLayer_openmp {
 
         Cube forward(const Cube& input) {
             std::vector<Cube> output_list(num_workers);
+            auto ff_f_individual_start = std::chrono::system_clock::now();
             #pragma omp parallel for num_threads(num_workers)
             for(int h = 0;h < num_workers;h++) {
                 hidden[h] = linear1[h].forward(input);
@@ -45,7 +46,11 @@ class FeedForwardLayer_openmp {
                 // Pass the result through the second linear layer
                 output_list[h] = linear2[h].forward(hidden[h]);
             }
+            auto ff_f_individual_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> ff_f_individual_elapsed_seconds = ff_f_individual_end - ff_f_individual_start;
+            std::cout << "FF Forward Individual Time: " << ff_f_individual_elapsed_seconds.count() << "s\n";
 
+            auto ff_f_merge_start = std::chrono::system_clock::now();
             // Merge the results from different workers
             Cube output(input.batch_size, input.rows, input.cols);
             for(int b = 0;b < input.batch_size;b++) {
@@ -59,6 +64,9 @@ class FeedForwardLayer_openmp {
                     }
                 }
             }
+            auto ff_f_merge_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> ff_f_merge_elapsed_seconds = ff_f_merge_end - ff_f_merge_start;
+            std::cout << "FF Forward Merge Time: " << ff_f_merge_elapsed_seconds.count() << "s\n";
             return output;
         }
 
@@ -66,7 +74,7 @@ class FeedForwardLayer_openmp {
             std::cout << "===================Feed Forward Backward===================" << std::endl;
             printf("grad(%d, %d, %d)\n", grad.batch_size, grad.rows, grad.cols);
             std::vector<Cube> output_list(num_workers);
-
+            auto ff_b_individual_start = std::chrono::system_clock::now();
             #pragma omp parallel for num_threads(num_workers)
             for(int h = 0;h < num_workers;h++) {
                 Cube grad_relu = linear2[h].backward(grad);
@@ -76,7 +84,11 @@ class FeedForwardLayer_openmp {
                 output_list[h] = linear1[h].backward(grad_relu);
                 printf("output slice(%d, %d, %d)\n", output_list[h].batch_size, output_list[h].rows, output_list[h].cols);
             }
-
+            auto ff_b_individual_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> ff_b_individual_elapsed_seconds = ff_b_individual_end - ff_b_individual_start;
+            std::cout << "FF Backward Individual Time: " << ff_b_individual_elapsed_seconds.count() << "s\n";
+            
+            auto ff_b_merge_start = std::chrono::system_clock::now();
             // Merge the results from different workers
             Cube output(grad.batch_size, grad.rows, grad.cols);
             for(int b = 0;b < grad.batch_size;b++) {
@@ -90,6 +102,9 @@ class FeedForwardLayer_openmp {
                     }
                 }
             }
+            auto ff_b_merge_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> ff_b_merge_elapsed_seconds = ff_b_merge_end - ff_b_merge_start;
+            std::cout << "FF Backward Merge Time: " << ff_b_merge_elapsed_seconds.count() << "s\n";
             return output;
         }
 };
