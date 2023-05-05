@@ -23,6 +23,17 @@ public:
         }
     }
 
+    Matrix(const Matrix& other) {
+        rows = other.rows;
+        cols = other.cols;
+        data = new float[rows * cols];
+
+        // Copy the data from the input object
+        for (int i = 0; i < rows * cols; ++i) {
+            data[i] = other.data[i];
+        }
+    }
+
     ~Matrix() {
         // delete[] data; // FIXME: this line will cause double free, comment it out for now
     }
@@ -113,7 +124,6 @@ public:
         for (int i = 0; i < output_dim; ++i) {
             bias[i] = 0.0f;
         }
-        std::cout << "Linear layer initialized with input dimension " << input_dim << " and output dimension " << output_dim << std::endl;
     }
 
     ~LinearLayer() {
@@ -157,7 +167,7 @@ public:
      * dL/db = dL/dY * dY/db = dL/dY * 1 (vector of batch size of 1)
     */
     Matrix backward(const Matrix& grad) {
-        // Compute gradient w.r.t. weight
+        // Compute gradient w.r.t. weight, dL/dW = X^T * dL/dY
         std::cout << "Linear Backward" << std::endl;
         std::cout << "Input cache: " << inputCopy.rows << "x" << inputCopy.cols << std::endl;
         std::cout << "input Grad: " << grad.rows << "x" << grad.cols << std::endl;

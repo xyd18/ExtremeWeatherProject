@@ -76,11 +76,42 @@ inline Matrix softMaxCrossEntropyBackward(Matrix output, std::vector<int> &label
     return grad;
 }
 
+/**
+ * A modified version of softMaxCrossEntropyBackward for Cube data structure.
+*/
+inline Cube softMaxCrossEntropyBackwardCube(Cube output, Cube labels) {
+    std::cout << "===================SoftmaxCrossEntropyBackward===================" << std::endl;
+    printf("output(%d, %d, %d)\n", output.batch_size, output.rows, output.cols);
+    printf("labels(%d, %d, %d)\n", labels.batch_size, labels.rows, labels.cols);
+    Cube grad(output.batch_size, output.rows, output.cols);
+    for(int b = 0;b < output.batch_size;b++) {
+        for(int n = 0;n < output.rows;n++) {
+            for(int c = 0;c < output.cols;c++) {
+                grad(b, n, c) = output(b, n, c) - labels(b, n, c);
+            }
+        }
+    }
+    printf("output grad(%d, %d, %d)\n", grad.batch_size, grad.rows, grad.cols);
+    return grad;
+}
+
 inline Matrix softmaxBackward(Matrix input) {
     Matrix grad(input.rows, input.cols);
     for (int i = 0; i < input.rows; ++i) {
         for (int j = 0; j < input.cols; ++j) {
             grad(i, j) = input(i, j) * (1 - input(i, j));
+        }
+    }
+    return grad;
+}
+
+inline Cube softmax_backwar_cube(Cube input) {
+    Cube grad(input.batch_size, input.rows, input.cols);
+    for(int b = 0;b < input.batch_size;b++) {
+        for(int n = 0;n < input.rows;n++) {
+            for(int c = 0;c < input.cols;c++) {
+                grad(b, n, c) = input(b, n, c) * (1 - input(b, n, c));
+            }
         }
     }
     return grad;
@@ -115,6 +146,34 @@ inline void relu_cube(Cube input) {
     }
     
 }
+
+inline void relu_backward_cube(Cube grad, Cube input) {
+    for(int b = 0;b < input.batch_size;b++) {
+        for (int i = 0; i < input.rows; ++i) {
+            for (int j = 0; j < input.cols; ++j) {
+                grad(b, i, j) = input(b, i, j) > 0 ? grad(b, i, j) : 0;
+            }
+        }
+    }
+}
+
+// inline void concate_cube(std::vector<Cube> input_list, int dimension) {
+//     switch (dimension) {
+//         case 2
+//             Cube output(input_list[0].batch_size, input_list[0].rows, input_list[0].cols * input_list.size());
+//             for(int b = 0;b < input_list[0].batch_size;b++) {
+//                 for(int i = 0;i < input_list[0].rows;i++) {
+//                     for(int j = 0;j < input_list[0].cols;j++) {
+//                         for(int i = 0;i < input_list.size();i++) {
+//                             output(b, n, c * input_list.size() + i) = input_list[i](b, n, c);
+//                         }
+//                     }
+//                 }
+//             }
+//         default:
+//             break;
+//     }
+// }
 
 } // namespace common
 #endif

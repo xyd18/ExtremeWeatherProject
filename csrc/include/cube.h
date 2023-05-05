@@ -1,11 +1,13 @@
 #ifndef CUBE_H_
 #define CUBE_H_
 
+#include "matrix.h"
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
 #include <vector>
 #include <random>
+#include <fstream>
 
 class Cube {
 public:
@@ -19,6 +21,18 @@ public:
 
     Cube(int batch_size, int rows, int cols) : batch_size(batch_size), rows(rows), cols(cols) {
         data = new float[batch_size * rows * cols];
+    }
+
+    Cube(const Cube& other) {
+        batch_size = other.batch_size;
+        rows = other.rows;
+        cols = other.cols;
+        data = new float[batch_size * rows * cols];
+
+        // Copy the data from the input object
+        for (int i = 0; i < batch_size * rows * cols; ++i) {
+            data[i] = other.data[i];
+        }
     }
 
     ~Cube() {
@@ -36,9 +50,10 @@ public:
     }
 
     void setZero() {
-        for (int i = 0; i < batch_size * rows * cols; ++i) {
-            data[i] = 0.0f;
-        }
+        std::fill(data, data + batch_size * rows * cols, 0.0f);
+        // for (int i = 0; i < batch_size * rows * cols; ++i) {
+        //     data[i] = 0.0f;
+        // }
     }
 
     float& operator()(int batch, int row, int col) {
@@ -125,6 +140,43 @@ public:
             }
         }
         return result;
+    }
+
+    // Serialize the Cube object to a file
+    void save(const std::string& filename) const {
+        std::ofstream file(filename, std::ios::binary);
+        if (file.is_open()) {
+            // Write the object's data members to the file
+            file.write(reinterpret_cast<const char*>(&batch_size), sizeof(int));
+            file.write(reinterpret_cast<const char*>(&rows), sizeof(int));
+            file.write(reinterpret_cast<const char*>(&cols), sizeof(int));
+            file.write(reinterpret_cast<const char*>(data), batch_size * rows * cols * sizeof(float));
+            file.close();
+        }
+        else {
+            // Handle error opening the file
+        }
+    }
+
+    // Deserialize the Cube object from a file
+    void load(const std::string& filename) {
+        std::ifstream file(filename, std::ios::binary);
+        if (file.is_open()) {
+            // Read the object's data members from the file
+            file.read(reinterpret_cast<char*>(&batch_size), sizeof(int));
+            file.read(reinterpret_cast<char*>(&rows), sizeof(int));
+            file.read(reinterpret_cast<char*>(&cols), sizeof(int));
+
+            // Allocate memory for the data array
+            data = new float[batch_size * rows * cols];
+
+            // Read the data array from the file
+            file.read(reinterpret_cast<char*>(data), batch_size * rows * cols * sizeof(float));
+            file.close();
+        }
+        else {
+            // Handle error opening the file
+        }
     }
 };
 
