@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
     // Parameters for demonstration purposes
     int input_dim = 512;   // Dimension of input representation
     int hidden_dim = 2048; // Dimension of hidden representation
-    int batch_size = 64;  // Number of input samples in the batch
+    int batch_size = 32;  // Number of input samples in the batch
     int seq_length = 100;
     int num_heads = 8;    // Number of heads in the multi-head attention sublayer
     int num_workers = 1;
